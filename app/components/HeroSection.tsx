@@ -46,7 +46,7 @@ const cardIntro: Variants = {
 
 const heroImages = [
   { src: '/images/reef1.jpg', alt: 'Reefside product 1' },
-  { src: '/images/1.jpg', alt: 'Reefside product 2' },
+  { src: '/images/reef3.jpg', alt: 'Reefside product 2' },
   { src: '/images/reef2.jpg', alt: 'Reefside product 3' },
 ];
 
@@ -54,9 +54,9 @@ export default function HeroSection() {
   return (
     <div className="relative z-10 h-[180vh]">
       <section
-        className="sticky top-0 flex min-h-screen flex-col items-center justify-center px-5 py-[60px] gap-[60px]"
+        className="sticky top-0 flex min-h-screen flex-col items-center justify-center px-5 py-15 gap-15"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-1/2 overflow-hidden [mask-image:linear-gradient(to_bottom,black_0%,black_72%,transparent_100%)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-1/2 overflow-hidden mask-[linear-gradient(to_bottom,black_0%,black_72%,transparent_100%)]">
           <Image
             src="/images/bg1.jpg"
             alt=""
@@ -77,11 +77,11 @@ export default function HeroSection() {
           animate="visible"
         />
 
-        <div className="relative z-10 grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-7.5 max-w-[1000px] w-full">
+        <div className="relative z-10 grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-7.5 max-w-250 w-full">
           {heroImages.map((image, index) => (
             <motion.div
               key={image.src}
-              className="relative bg-[#111] rounded-xl overflow-hidden aspect-[3/4] will-change-transform"
+              className="relative bg-[#111] rounded-xl overflow-hidden aspect-3/4 will-change-transform"
               variants={cardIntro}
               custom={index}
               initial="hidden"

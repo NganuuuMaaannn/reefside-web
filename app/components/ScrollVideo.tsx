@@ -54,6 +54,7 @@ export default function ScrollVideo() {
 
         const dur = video.duration;
         if (!isFinite(dur) || dur <= 0) return;
+        const finalTime = Math.max(0, dur - 0.05);
 
         initializedRef.current = true;
         targetTime = video.currentTime || 0;
@@ -61,28 +62,29 @@ export default function ScrollVideo() {
         lastSeekedTime = targetTime;
 
         let canvasHidden = false;
+        const smoothStep = (progress: number) => progress * progress * (3 - 2 * progress);
 
         gsap.set([video, canvas], { opacity: 0.82 });
-
-        const revealTimeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: wrapperRef.current,
-            start: 'top top',
-            end: '+=135%',
-            scrub: 0.75,
-          },
-        });
-
-        revealTimeline.to(overlay, { opacity: 1, duration: 0.28, ease: 'none' });
-        revealTimeline.to(overlay, { opacity: 0, duration: 0.72, ease: 'power1.inOut' });
 
         ScrollTrigger.create({
           trigger: wrapperRef.current,
           start: 'top top',
-          end: 'bottom bottom',
+          end: '+=400%',
           scrub: true,
           onUpdate: (self) => {
-            targetTime = self.progress * dur;
+            targetTime = self.progress * finalTime;
+            const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
+            const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
+
+            if (self.progress > 0.985) {
+              targetTime = finalTime;
+              renderedTime = finalTime;
+              lastSeekedTime = finalTime;
+              video.currentTime = finalTime;
+              gsap.set(overlay, { opacity: 1 });
+            } else {
+              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
+            }
 
             if (!scrubRaf) {
               scrubRaf = requestAnimationFrame(syncVideoTime);
