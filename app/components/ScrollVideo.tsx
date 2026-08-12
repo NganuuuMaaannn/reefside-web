@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -13,37 +13,84 @@ export default function ScrollVideo() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [loading, setLoading] = useState(true);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false);
 
   useGSAP(
     () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      if (!video || !canvas) return;
+      const overlay = overlayRef.current;
+      if (!video || !canvas || !overlay) return;
+
+      let scrubRaf = 0;
+      let targetTime = 0;
+      let renderedTime = 0;
+      let lastSeekedTime = -1;
+
+      const syncVideoTime = () => {
+        const diff = targetTime - renderedTime;
+
+        if (Math.abs(diff) < 0.012) {
+          renderedTime = targetTime;
+        } else {
+          renderedTime += diff * 0.16;
+        }
+
+        if (Math.abs(renderedTime - lastSeekedTime) > 0.045) {
+          lastSeekedTime = renderedTime;
+          video.currentTime = renderedTime;
+        }
+
+        if (Math.abs(targetTime - renderedTime) > 0.012) {
+          scrubRaf = requestAnimationFrame(syncVideoTime);
+        } else {
+          scrubRaf = 0;
+        }
+      };
 
       const initScrollScrub = () => {
+        if (initializedRef.current) return;
+
         const dur = video.duration;
         if (!isFinite(dur) || dur <= 0) return;
 
-        let lastTime = -1;
+        initializedRef.current = true;
+        targetTime = video.currentTime || 0;
+        renderedTime = targetTime;
+        lastSeekedTime = targetTime;
+
         let canvasHidden = false;
 
-        setLoading(false);
+        gsap.set([video, canvas], { opacity: 0.82 });
+
+        const revealTimeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: '+=135%',
+            scrub: 0.75,
+          },
+        });
+
+        revealTimeline.to(overlay, { opacity: 1, duration: 0.28, ease: 'none' });
+        revealTimeline.to(overlay, { opacity: 0, duration: 0.72, ease: 'power1.inOut' });
 
         ScrollTrigger.create({
           trigger: wrapperRef.current,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 0,
+          scrub: true,
           onUpdate: (self) => {
-            const time = self.progress * dur;
-            if (Math.abs(time - lastTime) > 0.04) {
-              lastTime = time;
-              video.currentTime = time;
+            targetTime = self.progress * dur;
+
+            if (!scrubRaf) {
+              scrubRaf = requestAnimationFrame(syncVideoTime);
             }
+
             if (!canvasHidden && self.progress > 0) {
               canvasHidden = true;
-              gsap.to(canvas, { opacity: 0, duration: 0.15 });
+              gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
             }
           },
         });
@@ -94,77 +141,44 @@ export default function ScrollVideo() {
         captureFirstFrame();
       };
 
+      const fallback = window.setTimeout(() => initScrollScrub(), 5000);
+      const handleError = () => initScrollScrub();
+
       video.addEventListener('loadeddata', start, { once: true });
+      video.addEventListener('error', handleError, { once: true });
 
-      const fallbackTimeout = setTimeout(() => {
-        if (loading) initScrollScrub();
-      }, 5000);
-
-      video.addEventListener('error', () => {
-        clearTimeout(fallbackTimeout);
-        setLoading(false);
-      }, { once: true });
+      return () => {
+        if (scrubRaf) {
+          cancelAnimationFrame(scrubRaf);
+        }
+        window.clearTimeout(fallback);
+        video.removeEventListener('loadeddata', start);
+        video.removeEventListener('error', handleError);
+      };
     },
     { scope: wrapperRef }
   );
 
   return (
-    <div ref={wrapperRef} style={{ height: '400vh', background: '#000' }}>
-      <video
-        ref={videoRef}
-        muted
-        playsInline
-        preload="auto"
-        src={VIDEO_SRC}
-        style={{
-          position: 'sticky',
-          top: 0,
-          width: '100%',
-          height: '100vh',
-          objectFit: 'cover',
-          opacity: 0.4,
-        }}
-      />
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'sticky',
-          top: 0,
-          width: '100%',
-          height: '100vh',
-          objectFit: 'cover',
-          zIndex: 1,
-        }}
-      />
-      {loading && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#000',
-          color: '#fff',
-          zIndex: 50,
-        }}>
-          <p>Loading video...</p>
-        </div>
-      )}
-      <img
-        src="/images/reefside.png"
-        alt="Reefside"
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'clamp(200px, 40vw, 300px)',
-          height: 'auto',
-          zIndex: 10,
-          pointerEvents: 'none',
-          display: loading ? 'none' : 'block',
-        }}
-      />
+    <div ref={wrapperRef} className="relative z-0 h-full bg-black">
+      <div className="fixed inset-0 h-screen w-full overflow-hidden">
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          preload="auto"
+          src={VIDEO_SRC}
+          className="absolute inset-0 h-full w-full object-cover opacity-0"
+        />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full object-cover opacity-0"
+        />
+        <div
+          ref={overlayRef}
+          className="absolute inset-0 bg-black opacity-100"
+        />
+      </div>
     </div>
   );
 }
