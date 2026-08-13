@@ -36,8 +36,8 @@ export default function GallerySection() {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapperRef.current,
-          start: 'top 105%',
-          end: 'top 5%',
+          start: 'top bottom',
+          end: 'top top',
           scrub: 0.9,
         },
       });
@@ -46,8 +46,8 @@ export default function GallerySection() {
         '.gallery-frame',
         {
           autoAlpha: 0,
-          y: 0,
-          scale: 1.04,
+          y: '42vh',
+          scale: 1.03,
           filter: 'blur(14px)',
         },
         {
@@ -66,7 +66,7 @@ export default function GallerySection() {
   );
 
   return (
-    <div ref={wrapperRef} className="gallery-section relative z-20 h-[180vh]">
+    <div ref={wrapperRef} className="gallery-section relative z-20 h-screen">
       <section className="pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16">
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">

@@ -9,7 +9,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd2-scrub.mp4';
 
-export default function ScrollVideo() {
+type ScrollVideoProps = {
+  onReady?: () => void;
+};
+
+export default function ScrollVideo({ onReady }: ScrollVideoProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,6 +101,8 @@ export default function ScrollVideo() {
           },
         });
 
+        onReady?.();
+
         ScrollTrigger.refresh();
 
         requestAnimationFrame(() => {
@@ -158,7 +164,7 @@ export default function ScrollVideo() {
         video.removeEventListener('error', handleError);
       };
     },
-    { scope: wrapperRef }
+    { dependencies: [onReady], scope: wrapperRef }
   );
 
   return (
