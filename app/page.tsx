@@ -11,17 +11,19 @@ const SmoothScroll = dynamic(() => import('./components/SmoothScroll'), { ssr: f
 
 export default function Home() {
   const [videoReady, setVideoReady] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const handleVideoReady = useCallback(() => setVideoReady(true), []);
+  const handleIntroComplete = useCallback(() => setIntroDone(true), []);
 
   return (
     <div className="relative isolate min-h-[400vh] overflow-x-hidden bg-black cursor-default">
-      <IntroLoader videoReady={videoReady} />
+      <IntroLoader videoReady={videoReady} onIntroComplete={handleIntroComplete} />
       <SmoothScroll />
       <div className="absolute inset-x-0 top-0 z-0 h-[400vh]">
         <ScrollVideo onReady={handleVideoReady} />
       </div>
       <div className="relative z-10">
-        <HeroSection />
+        <HeroSection introDone={introDone} />
         <div className="h-[220vh]" aria-hidden="true" />
         <GallerySection />
       </div>

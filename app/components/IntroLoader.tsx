@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react';
 
 type IntroLoaderProps = {
   videoReady: boolean;
+  onIntroComplete?: () => void;
 };
 
 const MIN_INTRO_MS = 3000;
 
-export default function IntroLoader({ videoReady }: IntroLoaderProps) {
+export default function IntroLoader({ videoReady, onIntroComplete }: IntroLoaderProps) {
   const [minElapsed, setMinElapsed] = useState(false);
   const visible = !(minElapsed && videoReady);
 
@@ -40,6 +41,7 @@ export default function IntroLoader({ videoReady }: IntroLoaderProps) {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.7, ease: 'easeInOut' } }}
+          onAnimationComplete={onIntroComplete}
         >
           <motion.img
             src="/images/reefside.png"

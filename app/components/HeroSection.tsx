@@ -17,7 +17,7 @@ const logoIntro: Variants = {
     scale: 1,
     filter: 'blur(0px)',
     transition: {
-      delay: 0.45,
+      delay: 0,
       duration: 0.9,
       ease: introEase,
     },
@@ -37,7 +37,7 @@ const cardIntro: Variants = {
     y: 0,
     filter: 'blur(0px)',
     transition: {
-      delay: 0.8 + index * 0.14,
+      delay: 0.35 + index * 0.14,
       duration: 0.9,
       ease: introEase,
     },
@@ -50,7 +50,11 @@ const heroImages = [
   { src: '/images/reef2.jpg', alt: 'Reefside product 3' },
 ];
 
-export default function HeroSection() {
+type HeroSectionProps = {
+  introDone?: boolean;
+};
+
+export default function HeroSection({ introDone = false }: HeroSectionProps) {
   return (
     <div className="relative z-10 h-[180vh]">
       <section
@@ -74,7 +78,7 @@ export default function HeroSection() {
           className="relative z-10 w-[clamp(150px,30vw,300px)] h-auto  will-change-transform"
           variants={logoIntro}
           initial="hidden"
-          animate="visible"
+          animate={introDone ? 'visible' : 'hidden'}
         />
 
         <div className="relative z-10 grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-7.5 max-w-250 w-full">
@@ -85,7 +89,7 @@ export default function HeroSection() {
               variants={cardIntro}
               custom={index}
               initial="hidden"
-              animate="visible"
+              animate={introDone ? 'visible' : 'hidden'}
             >
               <Image
                 src={image.src}
