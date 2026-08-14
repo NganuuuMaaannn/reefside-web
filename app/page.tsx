@@ -1,10 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const HeroSection = dynamic(() => import('./components/HeroSection'), { ssr: false });
 const GallerySection = dynamic(() => import('./components/GallerySection'), { ssr: false });
+const EditorialScroll = dynamic(() => import('./components/EditorialScroll'), { ssr: false });
 const IntroLoader = dynamic(() => import('./components/IntroLoader'), { ssr: false });
 const ScrollVideo = dynamic(() => import('./components/ScrollVideo'), { ssr: false });
 const SmoothScroll = dynamic(() => import('./components/SmoothScroll'), { ssr: false });
@@ -14,6 +15,10 @@ export default function Home() {
   const [introDone, setIntroDone] = useState(false);
   const handleVideoReady = useCallback(() => setVideoReady(true), []);
   const handleIntroComplete = useCallback(() => setIntroDone(true), []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="relative isolate min-h-[400vh] overflow-x-hidden bg-black cursor-default">
@@ -26,6 +31,7 @@ export default function Home() {
         <HeroSection introDone={introDone} />
         <div className="h-[220vh]" aria-hidden="true" />
         <GallerySection />
+        <EditorialScroll />
       </div>
     </div>
   );
