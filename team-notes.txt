@@ -1,2 +1,2 @@
 Project notes
-- Homepage hero text: "Reefside"
+- Homepage hero text: "Reefside" (Admin's version)
