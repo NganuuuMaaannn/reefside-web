@@ -24,12 +24,15 @@ export default function IntroLoader({ videoReady, onIntroComplete }: IntroLoader
 
     const originalOverflow = document.body.style.overflow;
     const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.touchAction = originalTouchAction;
     };
   }, [visible]);
@@ -44,7 +47,7 @@ export default function IntroLoader({ videoReady, onIntroComplete }: IntroLoader
           onAnimationComplete={onIntroComplete}
         >
           <motion.img
-            src="/images/reefside.png"
+            src="/images/reefside-logo.png"
             alt="Reefside"
             className="w-[clamp(160px,28vw,340px)] h-auto"
             initial={{ opacity: 0, scale: 1.08, filter: 'blur(24px)' }}

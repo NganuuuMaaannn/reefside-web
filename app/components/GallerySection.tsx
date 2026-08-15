@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
+import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -83,13 +84,15 @@ export default function GallerySection() {
       <section className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16">
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">
-            <Image
-              src={galleryImages[0].src}
-              alt={galleryImages[0].alt}
-              fill
-              sizes="(max-width: 768px) 100vw, 60vw"
-              className="object-cover"
-            />
+            <LightboxButton src={galleryImages[0].src} alt={galleryImages[0].alt} className="rounded-lg">
+              <Image
+                src={galleryImages[0].src}
+                alt={galleryImages[0].alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 60vw"
+                className="object-cover"
+              />
+            </LightboxButton>
           </div>
 
           <div className="grid min-h-0 grid-rows-2 gap-4 md:gap-5">
@@ -98,13 +101,15 @@ export default function GallerySection() {
                 key={image.src}
                 className="gallery-frame relative min-h-0 overflow-hidden rounded-lg bg-[#111] opacity-0"
               >
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  className="object-cover"
-                />
+                <LightboxButton src={image.src} alt={image.alt} className="rounded-lg">
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    className="object-cover"
+                  />
+                </LightboxButton>
               </div>
             ))}
           </div>

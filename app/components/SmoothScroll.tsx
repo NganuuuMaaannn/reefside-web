@@ -1,10 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const EASE = 0.14;
 
-export default function SmoothScroll() {
+type SmoothScrollProps = {
+  disabled?: boolean;
+};
+
+export default function SmoothScroll({ disabled = false }: SmoothScrollProps) {
+  const disabledRef = useRef(disabled);
+
+  useEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
+
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(pointer: fine)').matches) return;
@@ -26,6 +36,15 @@ export default function SmoothScroll() {
       }
     };
 
+    const syncToNativeScroll = () => {
+      if (rafId) {
+        targetY = clampScroll(targetY);
+        return;
+      }
+      currentY = window.scrollY;
+      targetY = currentY;
+    };
+
     const tick = () => {
       currentY += (targetY - currentY) * EASE;
 
@@ -45,6 +64,8 @@ export default function SmoothScroll() {
 
       event.preventDefault();
 
+      if (disabledRef.current) return;
+
       const deltaMultiplier =
         event.deltaMode === WheelEvent.DOM_DELTA_LINE
           ? 18
@@ -60,23 +81,16 @@ export default function SmoothScroll() {
       }
     };
 
-    const syncToNativeScroll = () => {
-      if (!rafId) {
-        currentY = window.scrollY;
-        targetY = currentY;
-      } else {
-        targetY = clampScroll(targetY);
-      }
-    };
-
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', syncToNativeScroll);
+    window.addEventListener('scroll', syncToNativeScroll, { passive: true });
     window.addEventListener('beforeunload', stopAnimation);
 
     return () => {
       stopAnimation();
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('resize', syncToNativeScroll);
+      window.removeEventListener('scroll', syncToNativeScroll);
       window.removeEventListener('beforeunload', stopAnimation);
     };
   }, []);

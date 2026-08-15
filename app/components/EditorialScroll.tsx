@@ -6,6 +6,7 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
 import ScrollVideo2 from './ScrollVideo2';
+import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,13 +74,19 @@ export default function EditorialScroll() {
       {/* ── MOBILE: vertical stack ── */}
       <section className="relative w-full px-4 pt-12 pb-20 block md:hidden">
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
-          <Image src="/images/reef10.jpg" alt="Reefside editorial hero" fill priority sizes="92vw" className="object-cover" />
+          <LightboxButton src="/images/reef10.jpg" alt="Reefside editorial hero" className="rounded-none">
+            <Image src="/images/reef10.jpg" alt="Reefside editorial hero" fill priority sizes="92vw" className="object-cover" />
+          </LightboxButton>
         </div>
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
-          <Image src="/images/reef11.jpg" alt="Reefside editorial" fill sizes="92vw" className="object-cover" />
+          <LightboxButton src="/images/reef11.jpg" alt="Reefside editorial" className="rounded-none">
+            <Image src="/images/reef11.jpg" alt="Reefside editorial" fill sizes="92vw" className="object-cover" />
+          </LightboxButton>
         </div>
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-6" style={{ aspectRatio: '16/9' }}>
-          <Image src="/images/reef12.jpg" alt="Reefside editorial landscape" fill sizes="92vw" loading="eager" className="object-cover" />
+          <LightboxButton src="/images/reef12.jpg" alt="Reefside editorial landscape" className="rounded-none">
+            <Image src="/images/reef12.jpg" alt="Reefside editorial landscape" fill sizes="92vw" loading="eager" className="object-cover" />
+          </LightboxButton>
         </div>
         <div className="ed-reveal opacity-0">
           <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-[#777]">Reefside Surf Co.</p>
@@ -130,21 +137,27 @@ export default function EditorialScroll() {
           lg:w-[51vw]
         "
         >
-          <Image
+          <LightboxButton
             src="/images/reef10.jpg"
             alt="Reefside editorial hero"
-            fill
-            priority
-            sizes="52vw"
-            className="
-              object-cover
-              transition-transform
-              duration-[1200ms]
-              ease-out
-              hover:scale-99
-              rounded-xl
-            "
-          />
+            className="rounded-xl"
+          >
+            <Image
+              src="/images/reef10.jpg"
+              alt="Reefside editorial hero"
+              fill
+              priority
+              sizes="52vw"
+              className="
+                object-cover
+                transition-transform
+                duration-1200
+                ease-out
+                hover:scale-99
+                rounded-xl
+              "
+            />
+          </LightboxButton>
         </div>
 
 
@@ -175,20 +188,26 @@ export default function EditorialScroll() {
             lg:w-[25%]
           "
         >
-          <Image
+          <LightboxButton
             src="/images/reef11.jpg"
             alt="Reefside editorial"
-            fill
-            sizes="24vw"
-            className="
-              object-cover
-              transition-transform
-              duration-[1200ms]
-              ease-out
-              hover:scale-98
-              rounded-xl
-            "
-          />
+            className="rounded-xl"
+          >
+            <Image
+              src="/images/reef11.jpg"
+              alt="Reefside editorial"
+              fill
+              sizes="24vw"
+              className="
+                object-cover
+                transition-transform
+                duration-1200
+                ease-out
+                hover:scale-98
+                rounded-xl
+              "
+            />
+          </LightboxButton>
         </div>
 
 
@@ -208,7 +227,7 @@ export default function EditorialScroll() {
             h-[38vh]
             w-[48vw]
 
-            md:left-[0]
+            md:left-0
             md:top-[59vh]
             md:h-[48vh]
             md:w-[48vw]
@@ -218,21 +237,27 @@ export default function EditorialScroll() {
             lg:w-[48%]
           "
         >
-          <Image
+          <LightboxButton
             src="/images/reef12.jpg"
             alt="Reefside editorial landscape"
-            fill
-            sizes="47vw"
-            loading="eager"
-            className="
-              object-cover
-              transition-transform
-              duration-[1200ms]
-              ease-out
-              hover:scale-99
-              rounded-xl
-            "
-          />
+            className="rounded-xl"
+          >
+            <Image
+              src="/images/reef12.jpg"
+              alt="Reefside editorial landscape"
+              fill
+              sizes="47vw"
+              loading="eager"
+              className="
+                object-cover
+                transition-transform
+                duration-1200
+                ease-out
+                hover:scale-99
+                rounded-xl
+              "
+            />
+          </LightboxButton>
         </div>
 
 
@@ -257,7 +282,7 @@ export default function EditorialScroll() {
             lg:w-[30vw]
           "
         >
-          <p className="mb-3 text-[14px] uppercase tracking-[0.25em] text-[#777]">
+          <p className="mb-3 text-[14px] uppercase tracking-[0.25em] text-gray-300">
             Reefside Surf Co.
           </p>
 
@@ -276,7 +301,7 @@ export default function EditorialScroll() {
             lifestyle created to share the stoke since 2006.
           </h2>
 
-          <p className="mt-5 text-[14px] uppercase tracking-[0.2em] text-[#555]">
+          <p className="mt-5 text-[14px] uppercase tracking-[0.2em] text-gray-300">
             Enjoy the Ride
           </p>
         </div>

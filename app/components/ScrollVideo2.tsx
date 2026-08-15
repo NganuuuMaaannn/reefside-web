@@ -115,34 +115,19 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
           return false;
         };
 
-        const v = video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: () => void) => void };
-        if (v.requestVideoFrameCallback) {
-          v.requestVideoFrameCallback(() => {
-            draw();
-            initScrollScrub();
-          });
-        } else {
-          video.addEventListener('seeked', () => {
-            draw();
-            initScrollScrub();
-          }, { once: true });
-          video.currentTime = 0.1;
-        }
-      };
+        const onSeeked = () => {
+          draw();
+          initScrollScrub();
+        };
 
-      const start = async () => {
-        try {
-          await video.play();
-          video.pause();
-          video.currentTime = 0;
-        } catch {}
-        captureFirstFrame();
+        video.addEventListener('seeked', onSeeked, { once: true });
+        video.currentTime = 0.1;
       };
 
       const fallback = window.setTimeout(() => initScrollScrub(), 5000);
       const handleError = () => initScrollScrub();
 
-      video.addEventListener('loadeddata', start, { once: true });
+      video.addEventListener('loadedmetadata', captureFirstFrame, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
       return () => {
@@ -150,7 +135,7 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
           cancelAnimationFrame(scrubRaf);
         }
         window.clearTimeout(fallback);
-        video.removeEventListener('loadeddata', start);
+        video.removeEventListener('loadedmetadata', captureFirstFrame);
         video.removeEventListener('error', handleError);
       };
     },
@@ -159,12 +144,14 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
 
   return (
     <div ref={wrapperRef} className="relative z-0">
-      <div className="fixed inset-0 z-0 h-screen w-full overflow-hidden pointer-events-none">
+      <div className="scrollvid2-fixed fixed inset-0 z-0 h-screen w-full overflow-hidden pointer-events-none">
         <video
           ref={videoRef}
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
+          controlsList="nodownload"
+          disablePictureInPicture
           src={VIDEO_SRC}
           className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0"
         />

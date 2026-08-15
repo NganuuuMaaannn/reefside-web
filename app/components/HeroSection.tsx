@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from 'framer-motion';
 import Image from 'next/image';
+import { LightboxButton } from './Lightbox';
 
 const introEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const heroBackgroundOpacity = 0.35;
@@ -91,18 +92,20 @@ export default function HeroSection({ introDone = false }: HeroSectionProps) {
               initial="hidden"
               animate={introDone ? 'visible' : 'hidden'}
             >
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                sizes="(max-width: 768px) 100vw, 333px"
-                className="object-cover"
-              />
+              <LightboxButton src={image.src} alt={image.alt} className="rounded-xl">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 333px"
+                  className="object-cover"
+                />
+              </LightboxButton>
             </motion.div>
           ))}
         </div>
 
-        <p className="relative z-10 text-[10px] text-[#555] uppercase tracking-[0.2em] animate-bounce">
+        <p className="relative z-10 text-[8px] text-gray-300 uppercase tracking-[0.2em] animate-bounce">
           Scroll down to explore
         </p>
       </section>

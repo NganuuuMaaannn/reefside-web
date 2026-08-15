@@ -24,4 +24,84 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Fluid Button (pill, label-swap fill on hover) ── */
+.fluid-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 24px 50px;
+  border: 2px solid rgb(250 250 250);
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.fluid-btn:hover { transform: scale(1.05); }
+
+.fluid-btn-label-stack {
+  position: relative;
+  z-index: 1;
+  height: 16px;
+  overflow: hidden;
+}
+
+.fluid-btn-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(250 250 250);
+  transition: color 0.3s ease;
+}
+
+.fluid-btn:hover .fluid-btn-label { color: rgb(1 1 1); }
+
+.fluid-btn-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -100%;
+  height: calc(100% + 8px);
+  background: rgb(250 250 250);
+  border-radius: 50%;
+  z-index: 0;
+  transform-origin: bottom center;
+  animation: fluid-btn-pulse 2.6s ease-in-out infinite;
+  transition:
+    top 0.5s cubic-bezier(0.4, 0, 0, 1),
+    bottom 0.5s cubic-bezier(0.4, 0, 0, 1),
+    height 0.5s cubic-bezier(0.4, 0, 0, 1),
+    border-radius 0.5s cubic-bezier(0.4, 0, 0, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0, 1);
+}
+
+.fluid-btn:hover .fluid-btn-overlay {
+  top: 0;
+  bottom: auto;
+  height: 100%;
+  border-radius: 0;
+  animation: none;
+}
+
+@keyframes fluid-btn-pulse {
+  0%, 100% { transform: scale(1, 0.92); opacity: 0.55; }
+  50% { transform: scale(1, 1.06); opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fluid-btn,
+  .fluid-btn-label-stack,
+  .fluid-btn-overlay {
+    transition: none;
+  }
+  .fluid-btn-overlay { animation: none; }
+}
+
 
