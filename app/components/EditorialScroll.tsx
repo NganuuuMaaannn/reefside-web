@@ -10,7 +10,11 @@ import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function EditorialScroll() {
+type EditorialScrollProps = {
+  onVideoReady?: () => void;
+};
+
+export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -69,7 +73,7 @@ export default function EditorialScroll() {
       className="editorial-scroll-section relative z-30 w-full text-white"
     >
       {/* ── BACKGROUND: scrollvid2 dissolves in as the editorial scrolls ── */}
-      <ScrollVideo2 triggerRef={wrapperRef} />
+      <ScrollVideo2 triggerRef={wrapperRef} onReady={onVideoReady} />
 
       {/* ── MOBILE: vertical stack ── */}
       <section className="relative w-full px-4 pt-12 pb-20 block md:hidden">

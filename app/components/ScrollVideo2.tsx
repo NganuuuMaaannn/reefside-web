@@ -12,9 +12,10 @@ const VIDEO_SRC = '/video/ripsayd4-scrub.mp4';
 
 type ScrollVideo2Props = {
   triggerRef?: RefObject<HTMLElement | null>;
+  onReady?: () => void;
 };
 
-export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
+export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,6 +94,8 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
           },
         });
 
+        onReady?.();
+
         ScrollTrigger.refresh();
 
         requestAnimationFrame(() => {
@@ -139,7 +142,7 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
         video.removeEventListener('error', handleError);
       };
     },
-    { dependencies: [triggerRef], scope: wrapperRef }
+    { dependencies: [triggerRef, onReady], scope: wrapperRef }
   );
 
   return (
@@ -149,7 +152,7 @@ export default function ScrollVideo2({ triggerRef }: ScrollVideo2Props) {
           ref={videoRef}
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}

@@ -159,7 +159,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           ref={videoRef}
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}

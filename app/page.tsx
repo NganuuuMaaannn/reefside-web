@@ -15,9 +15,13 @@ const SmoothScroll = dynamic(() => import('./components/SmoothScroll'), { ssr: f
 
 export default function Home() {
   const [videoReady, setVideoReady] = useState(false);
+  const [video2Ready, setVideo2Ready] = useState(false);
   const [introDone, setIntroDone] = useState(false);
   const handleVideoReady = useCallback(() => setVideoReady(true), []);
+  const handleVideo2Ready = useCallback(() => setVideo2Ready(true), []);
   const handleIntroComplete = useCallback(() => setIntroDone(true), []);
+
+  const allVideoReady = videoReady && video2Ready;
 
   useEffect(() => {
     if ('scrollRestoration' in history) {
@@ -35,7 +39,7 @@ export default function Home() {
   return (
     <div className="relative isolate min-h-[400vh] overflow-x-hidden bg-black cursor-default">
       <LightboxProvider>
-        <IntroLoader videoReady={videoReady} onIntroComplete={handleIntroComplete} />
+        <IntroLoader videoReady={allVideoReady} onIntroComplete={handleIntroComplete} />
         <SmoothScroll disabled={!introDone} />
         <div className="absolute inset-x-0 top-0 z-0 h-[400vh]">
           <ScrollVideo onReady={handleVideoReady} />
@@ -44,7 +48,7 @@ export default function Home() {
           <HeroSection introDone={introDone} />
           <div className="h-[220vh]" aria-hidden="true" />
           <GallerySection />
-          <EditorialScroll />
+          <EditorialScroll onVideoReady={handleVideo2Ready} />
           <SplitSection />
           <OutroSection />
         </div>
