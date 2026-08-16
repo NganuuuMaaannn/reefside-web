@@ -21,6 +21,17 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initializedRef = useRef(false);
 
+  const forceVideoLoad = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(() => video.pause()).catch(() => {});
+    } else {
+      window.setTimeout(() => video.pause(), 250);
+    }
+  };
+
   useEffect(() => {
     const video = videoRef.current;
     const target = wrapperRef.current;
@@ -32,6 +43,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         if (video.dataset.fullLoaded === 'true') return;
         video.dataset.fullLoaded = 'true';
         video.preload = 'auto';
+        video.addEventListener('loadeddata', forceVideoLoad, { once: true });
         video.load();
         observer.disconnect();
       },
@@ -155,6 +167,10 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         video.currentTime = 0.1;
       };
 
+      const onMetadata = () => {
+        captureFirstFrame();
+      };
+
       let durationRetries = 0;
       const MAX_DURATION_RETRIES = 40;
       let retryTimer = 0;
@@ -168,7 +184,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         initScrollScrub();
       };
 
-      video.addEventListener('loadedmetadata', captureFirstFrame, { once: true });
+      video.addEventListener('loadedmetadata', onMetadata, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
       return () => {
@@ -177,7 +193,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         }
         window.clearTimeout(fallback);
         window.clearTimeout(retryTimer);
-        video.removeEventListener('loadedmetadata', captureFirstFrame);
+        video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('error', handleError);
       };
     },
@@ -191,6 +207,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           ref={videoRef}
           muted
           playsInline
+          webkit-playsinline="true"
           preload="metadata"
           controlsList="nodownload"
           disablePictureInPicture

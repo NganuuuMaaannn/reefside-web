@@ -84,7 +84,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           scrub: true,
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
-            const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
             const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
 
             if (self.progress > 0.985) {
@@ -94,7 +93,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
               video.currentTime = finalTime;
               gsap.set(overlay, { opacity: 1 });
             } else {
-              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
+              gsap.set(overlay, { opacity: dipProgress });
             }
 
             if (!scrubRaf) {
@@ -141,6 +140,20 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         video.currentTime = 0.1;
       };
 
+      const forceLoad = () => {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => video.pause()).catch(() => {});
+        } else {
+          window.setTimeout(() => video.pause(), 250);
+        }
+      };
+
+      const onMetadata = () => {
+        forceLoad();
+        captureFirstFrame();
+      };
+
       let durationRetries = 0;
       const MAX_DURATION_RETRIES = 40;
       let retryTimer = 0;
@@ -154,7 +167,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         initScrollScrub();
       };
 
-      video.addEventListener('loadedmetadata', captureFirstFrame, { once: true });
+      video.addEventListener('loadedmetadata', onMetadata, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
       return () => {
@@ -163,7 +176,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         }
         window.clearTimeout(fallback);
         window.clearTimeout(retryTimer);
-        video.removeEventListener('loadedmetadata', captureFirstFrame);
+        video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('error', handleError);
       };
     },
@@ -177,6 +190,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           ref={videoRef}
           muted
           playsInline
+          webkit-playsinline="true"
           preload="auto"
           controlsList="nodownload"
           disablePictureInPicture
