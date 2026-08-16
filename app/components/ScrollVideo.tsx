@@ -35,18 +35,18 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       const syncVideoTime = () => {
         const diff = targetTime - renderedTime;
 
-        if (Math.abs(diff) < 0.012) {
+        if (Math.abs(diff) < 0.008) {
           renderedTime = targetTime;
         } else {
-          renderedTime += diff * 0.16;
+          renderedTime += diff * 0.35;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > 0.045) {
+        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
 
-        if (Math.abs(targetTime - renderedTime) > 0.012) {
+        if (Math.abs(targetTime - renderedTime) > 0.008) {
           scrubRaf = requestAnimationFrame(syncVideoTime);
         } else {
           scrubRaf = 0;
@@ -57,7 +57,14 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         if (initializedRef.current) return;
 
         const dur = video.duration;
-        if (!isFinite(dur) || dur <= 0) return;
+        if (!isFinite(dur) || dur <= 0) {
+          if (durationRetries < MAX_DURATION_RETRIES) {
+            durationRetries += 1;
+            window.clearTimeout(retryTimer);
+            retryTimer = window.setTimeout(initScrollScrub, 250);
+          }
+          return;
+        }
         const finalTime = Math.max(0, dur - 0.05);
 
         initializedRef.current = true;
@@ -134,8 +141,18 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         video.currentTime = 0.1;
       };
 
-      const fallback = window.setTimeout(() => initScrollScrub(), 5000);
-      const handleError = () => initScrollScrub();
+      let durationRetries = 0;
+      const MAX_DURATION_RETRIES = 40;
+      let retryTimer = 0;
+
+      const fallback = window.setTimeout(() => {
+        if (!initializedRef.current) onReady?.();
+        initScrollScrub();
+      }, 5000);
+      const handleError = () => {
+        if (!initializedRef.current) onReady?.();
+        initScrollScrub();
+      };
 
       video.addEventListener('loadedmetadata', captureFirstFrame, { once: true });
       video.addEventListener('error', handleError, { once: true });
@@ -145,6 +162,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           cancelAnimationFrame(scrubRaf);
         }
         window.clearTimeout(fallback);
+        window.clearTimeout(retryTimer);
         video.removeEventListener('loadedmetadata', captureFirstFrame);
         video.removeEventListener('error', handleError);
       };
