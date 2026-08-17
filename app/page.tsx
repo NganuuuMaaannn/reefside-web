@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { LightboxProvider } from './components/Lightbox';
 
 const HeroSection = dynamic(() => import('./components/HeroSection'), { ssr: false });
@@ -23,7 +23,7 @@ export default function Home() {
 
   const allVideoReady = videoReady && video2Ready;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }

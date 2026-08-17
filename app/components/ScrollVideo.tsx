@@ -84,6 +84,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           scrub: true,
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
+            const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
             const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
 
             if (self.progress > 0.985) {
@@ -93,7 +94,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
               video.currentTime = finalTime;
               gsap.set(overlay, { opacity: 1 });
             } else {
-              gsap.set(overlay, { opacity: dipProgress });
+              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
             }
 
             if (!scrubRaf) {

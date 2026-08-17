@@ -127,7 +127,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
               scrubRaf = requestAnimationFrame(syncVideoTime);
             }
 
-            if (!canvasHidden && self.progress > 0.05) {
+            if (!canvasHidden && self.progress > 0.01) {
               canvasHidden = true;
               gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
             }

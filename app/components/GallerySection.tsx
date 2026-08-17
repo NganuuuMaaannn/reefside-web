@@ -25,6 +25,7 @@ export default function GallerySection() {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       if (prefersReducedMotion) {
+        gsap.set('.gallery-viewport', { autoAlpha: 1 });
         gsap.set('.gallery-frame', {
           autoAlpha: 1,
           y: 0,
@@ -34,14 +35,18 @@ export default function GallerySection() {
         return;
       }
 
+      gsap.set('.gallery-viewport', { autoAlpha: 0 });
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapperRef.current,
           start: 'top bottom',
-          end: 'top top',
-          scrub: 0.9,
+          end: 'bottom top',
+          scrub: 0.6,
         },
       });
+
+      tl.to('.gallery-viewport', { autoAlpha: 1, duration: 0.03 }, 0);
 
       tl.fromTo(
         '.gallery-frame',
@@ -56,32 +61,27 @@ export default function GallerySection() {
           y: 0,
           scale: 1,
           filter: 'blur(0px)',
-          duration: 0.9,
-          stagger: 0.08,
+          duration: 0.3,
+          stagger: 0.03,
           ease: 'power2.out',
         },
-        0.12
+        0.04
       );
 
-      gsap.to('.gallery-viewport', {
+      tl.to('.gallery-viewport', {
         scale: 0.82,
         autoAlpha: 0,
         filter: 'blur(12px)',
-        ease: 'none',
-        scrollTrigger: {
-          trigger: wrapperRef.current,
-          start: 'center center',
-          end: 'bottom top',
-          scrub: 0.6,
-        },
-      });
+        ease: 'power1.in',
+        duration: 0.4,
+      }, 0.6);
     },
     { scope: wrapperRef }
   );
 
   return (
     <div ref={wrapperRef} className="gallery-section relative z-20 h-[150vh]">
-      <section className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16">
+      <section className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16 opacity-0">
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">
             <LightboxButton src={galleryImages[0].src} alt={galleryImages[0].alt} className="rounded-lg">
