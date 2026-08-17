@@ -49,7 +49,7 @@ export default function GallerySection() {
         },
       });
 
-      tl.to(vp, { autoAlpha: 1, duration: 0.03 }, 0);
+      tl.fromTo(vp, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.03 }, 0);
 
       tl.fromTo(
         '.gallery-frame',
@@ -84,7 +84,11 @@ export default function GallerySection() {
 
   return (
     <div ref={wrapperRef} className="gallery-section relative z-20 h-[150vh]">
-      <section ref={vpRef} className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16 opacity-0 invisible">
+      <section
+        ref={vpRef}
+        style={{ opacity: 0, visibility: 'hidden' }}
+        className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16"
+      >
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">
             <LightboxButton src={galleryImages[0].src} alt={galleryImages[0].alt} className="rounded-lg">
