@@ -116,7 +116,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
 
-            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
+            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, self.progress / 0.25));
             if (canvasHidden) {
               gsap.set(video, { opacity: fadeIn });
             } else {

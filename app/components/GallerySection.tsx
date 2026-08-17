@@ -38,7 +38,9 @@ export default function GallerySection() {
         return;
       }
 
-      gsap.set(vp, { autoAlpha: 0 });
+      gsap.set(vp, { autoAlpha: 0, visibility: 'hidden' });
+
+      const forceHide = () => gsap.set(vp, { autoAlpha: 0, visibility: 'hidden' });
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -46,6 +48,12 @@ export default function GallerySection() {
           start: 'top bottom',
           end: 'bottom top',
           scrub: 0.6,
+          onToggle: (self) => {
+            if (!self.isActive) forceHide();
+          },
+          onUpdate: (self) => {
+            if (self.progress < 0.02 || self.progress > 0.97) forceHide();
+          },
         },
       });
 
