@@ -95,7 +95,7 @@ export default function GallerySection() {
       <section
         ref={vpRef}
         style={{ opacity: 0, visibility: 'hidden' }}
-        className="gallery-viewport pointer-events-none fixed inset-0 z-20 flex h-screen items-center overflow-hidden px-5 py-16"
+        className="gallery-viewport pointer-events-none fixed inset-0 z-40 flex h-screen items-center overflow-hidden px-5 py-16"
       >
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">
