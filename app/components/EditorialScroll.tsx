@@ -21,22 +21,7 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
     () => {
       if (!wrapperRef.current) return;
 
-      const prefersReducedMotion = window.matchMedia(
-        '(prefers-reduced-motion: reduce)'
-      ).matches;
-
       const elements = gsap.utils.toArray<HTMLElement>('.ed-reveal');
-
-      if (prefersReducedMotion) {
-        gsap.set(elements, {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          filter: 'blur(0px)',
-        });
-
-        return;
-      }
 
       elements.forEach((element) => {
         gsap.fromTo(

@@ -25,19 +25,6 @@ export default function GallerySection() {
       const wrap = wrapperRef.current;
       if (!vp || !wrap) return;
 
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (prefersReducedMotion) {
-        gsap.set(vp, { autoAlpha: 1 });
-        gsap.set('.gallery-frame', {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          filter: 'blur(0px)',
-        });
-        return;
-      }
-
       gsap.set(vp, { autoAlpha: 0, visibility: 'hidden' });
 
       const forceHide = () => gsap.set(vp, { autoAlpha: 0, visibility: 'hidden' });

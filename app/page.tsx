@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { MotionConfig } from 'framer-motion';
 import { LightboxProvider } from './components/Lightbox';
 
 const HeroSection = dynamic(() => import('./components/HeroSection'), { ssr: false });
@@ -38,21 +39,23 @@ export default function Home() {
 
   return (
     <div className="relative isolate min-h-[400vh] overflow-x-hidden bg-black cursor-default">
-      <LightboxProvider>
-        <IntroLoader videoReady={allVideoReady} onIntroComplete={handleIntroComplete} />
-        <SmoothScroll disabled={!introDone} />
-        <div className="absolute inset-x-0 top-0 z-0 h-[400vh]">
-          <ScrollVideo onReady={handleVideoReady} />
-        </div>
-        <div className="relative z-10">
-          <HeroSection introDone={introDone} />
-          <div className="h-[220vh]" aria-hidden="true" />
-          <GallerySection />
-          <EditorialScroll onVideoReady={handleVideo2Ready} />
-          <SplitSection />
-          <OutroSection />
-        </div>
-      </LightboxProvider>
+      <MotionConfig reducedMotion="user">
+        <LightboxProvider>
+          <IntroLoader videoReady={allVideoReady} onIntroComplete={handleIntroComplete} />
+          <SmoothScroll disabled={!introDone} />
+          <div className="absolute inset-x-0 top-0 z-0 h-[400vh]">
+            <ScrollVideo onReady={handleVideoReady} />
+          </div>
+          <div className="relative z-10">
+            <HeroSection introDone={introDone} />
+            <div className="h-[220vh]" aria-hidden="true" />
+            <GallerySection />
+            <EditorialScroll onVideoReady={handleVideo2Ready} />
+            <SplitSection />
+            <OutroSection />
+          </div>
+        </LightboxProvider>
+      </MotionConfig>
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useRef } from 'react';
 import {
   motion,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from 'framer-motion';
@@ -18,7 +17,6 @@ gsap.registerPlugin(ScrollTrigger);
 export default function SplitSection() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
 
   useGSAP(
     () => {
@@ -27,11 +25,6 @@ export default function SplitSection() {
       const scrollvidFixed = Array.from(
         document.querySelectorAll<HTMLElement>('.scrollvid2-fixed')
       );
-
-      if (prefersReducedMotion) {
-        gsap.set(scrollvidFixed, { opacity: 0 });
-        return;
-      }
 
       gsap.fromTo(
         scrollvidFixed,
@@ -42,13 +35,13 @@ export default function SplitSection() {
           scrollTrigger: {
             trigger: gridRef.current,
             start: 'top bottom',
-            end: 'top 15%',
+            end: 'top top',
             scrub: 0.8,
           },
         }
       );
     },
-    { scope: wrapperRef, dependencies: [prefersReducedMotion] }
+    { scope: wrapperRef }
   );
 
   const { scrollYProgress } = useScroll({
@@ -59,37 +52,33 @@ export default function SplitSection() {
   const leftOpacity = useTransform(
     scrollYProgress,
     [0, 0.55],
-    prefersReducedMotion ? [1, 1] : [0, 1]
+    [0, 1]
   );
   const leftY = useTransform(
     scrollYProgress,
     [0, 0.7],
-    prefersReducedMotion ? [0, 0] : [110, 0]
+    [110, 0]
   );
   const leftBlur = useTransform(
     scrollYProgress,
     [0, 0.55],
-    prefersReducedMotion
-      ? ['blur(0px)', 'blur(0px)']
-      : ['blur(10px)', 'blur(0px)']
+    ['blur(10px)', 'blur(0px)']
   );
 
   const rightOpacity = useTransform(
     scrollYProgress,
     [0.12, 0.67],
-    prefersReducedMotion ? [1, 1] : [0, 1]
+    [0, 1]
   );
   const rightY = useTransform(
     scrollYProgress,
     [0.12, 0.82],
-    prefersReducedMotion ? [0, 0] : [110, 0]
+    [110, 0]
   );
   const rightBlur = useTransform(
     scrollYProgress,
     [0.12, 0.67],
-    prefersReducedMotion
-      ? ['blur(0px)', 'blur(0px)']
-      : ['blur(10px)', 'blur(0px)']
+    ['blur(10px)', 'blur(0px)']
   );
 
   return (

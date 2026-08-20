@@ -95,13 +95,6 @@ body {
   50% { transform: scale(1, 1.06); opacity: 0.85; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .fluid-btn,
-  .fluid-btn-label-stack,
-  .fluid-btn-overlay {
-    transition: none;
-  }
-  .fluid-btn-overlay { animation: none; }
-}
+/* ── Fluid Button end ── */
 
 

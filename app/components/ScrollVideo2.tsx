@@ -34,7 +34,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
 
   useEffect(() => {
     const video = videoRef.current;
-    const target = wrapperRef.current;
+    const target = triggerRef?.current ?? wrapperRef.current;
     if (!video || !target) return;
 
     const observer = new IntersectionObserver(
@@ -52,7 +52,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [triggerRef]);
 
   useGSAP(
     () => {
@@ -116,7 +116,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
 
-            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, self.progress / 0.25));
+            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
             if (canvasHidden) {
               gsap.set(video, { opacity: fadeIn });
             } else {

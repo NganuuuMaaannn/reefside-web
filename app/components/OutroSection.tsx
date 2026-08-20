@@ -17,37 +17,16 @@ export default function OutroSection() {
     () => {
       if (!wrapperRef.current) return;
 
-      const prefersReducedMotion = window.matchMedia(
-        '(prefers-reduced-motion: reduce)'
-      ).matches;
-
       const splitSection = document.querySelector<HTMLElement>('.split-section');
       const container = wrapperRef.current.querySelector<HTMLElement>('.outro-fixed');
 
       gsap.set(container, { autoAlpha: 0 });
 
-      if (prefersReducedMotion) {
-        if (splitSection) {
-          gsap.set(splitSection, { scale: 1, opacity: 1 });
-        }
-        gsap.set('.outro-item', { autoAlpha: 1, y: 0, filter: 'blur(0px)' });
-
-        ScrollTrigger.create({
-          trigger: wrapperRef.current,
-          start: 'top bottom',
-          end: 'top top',
-          onToggle: (self) => {
-            gsap.to(container, { autoAlpha: self.isActive ? 1 : 0, duration: 0.4 });
-          },
-        });
-        return;
-      }
-
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapperRef.current,
           start: 'top bottom',
-          end: 'top top',
+          end: 'bottom top',
           scrub: 0.8,
         },
       });
@@ -82,18 +61,18 @@ export default function OutroSection() {
           autoAlpha: 1,
           y: 0,
           filter: 'blur(0px)',
-          duration: 0.45,
-          stagger: 0.1,
+          duration: 0.35,
+          stagger: 0.06,
           ease: 'power3.out',
         },
-        0.15
+        0.05
       );
     },
     { scope: wrapperRef }
   );
 
   return (
-    <div ref={wrapperRef} className="outro-section relative z-20 w-full">
+    <div ref={wrapperRef} className="outro-section relative z-30 w-full">
       <div className="outro-fixed pointer-events-none fixed inset-0 z-0">
         <div className="outro-bg absolute inset-0 overflow-hidden">
           <Image
@@ -106,9 +85,9 @@ export default function OutroSection() {
         </div>
         <div className="absolute inset-0 bg-black/60" />
 
-        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center p-6 md:p-10 lg:p-16">
-          <div className="flex flex-col items-center gap-12 sm:flex-row sm:gap-16 lg:gap-24">
-            <div className="outro-item relative aspect-square h-auto w-[clamp(190px,30vw,360px)]">
+        <div className="pointer-events-auto absolute inset-0 flex items-center justify-center overflow-y-auto p-6 md:p-10 lg:p-16">
+          <div className="flex flex-col items-center gap-8 sm:flex-row sm:gap-12 lg:gap-20">
+            <div className="outro-item relative aspect-square h-auto w-[clamp(140px,22vw,280px)]">
               <Image
                 src="/images/reefside.png"
                 alt="Reefside"
@@ -178,7 +157,7 @@ export default function OutroSection() {
         </div>
       </div>
 
-      <div className="h-[110vh]" aria-hidden="true" />
+      <div className="h-[150vh]" aria-hidden="true" />
     </div>
   );
 }
