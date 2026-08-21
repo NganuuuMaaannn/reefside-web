@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -16,6 +16,22 @@ type EditorialScrollProps = {
 
 export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (!wrapperRef.current) return;
+      const elements = wrapperRef.current.querySelectorAll<HTMLElement>('.ed-reveal');
+      elements.forEach((el) => {
+        if (el.style.opacity === '0' || el.style.visibility === 'hidden') {
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+          el.style.transform = 'none';
+          el.style.filter = 'none';
+        }
+      });
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useGSAP(
     () => {

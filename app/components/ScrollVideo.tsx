@@ -8,6 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd2-scrub.mp4';
+const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
 type ScrollVideoProps = {
   onReady?: () => void;
@@ -31,6 +32,9 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       let targetTime = 0;
       let renderedTime = 0;
       let lastSeekedTime = -1;
+      let durationRetries = 0;
+      const MAX_DURATION_RETRIES = 30;
+      let retryTimer = 0;
 
       const syncVideoTime = () => {
         const diff = targetTime - renderedTime;
@@ -62,6 +66,8 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
             durationRetries += 1;
             window.clearTimeout(retryTimer);
             retryTimer = window.setTimeout(initScrollScrub, 250);
+          } else {
+            onReady?.();
           }
           return;
         }
@@ -119,6 +125,11 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       };
 
       const captureFirstFrame = () => {
+        if (IS_MOBILE) {
+          initScrollScrub();
+          return;
+        }
+
         const draw = () => {
           try {
             const ctx = canvas.getContext('2d');
@@ -154,10 +165,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         forceLoad();
         captureFirstFrame();
       };
-
-      let durationRetries = 0;
-      const MAX_DURATION_RETRIES = 40;
-      let retryTimer = 0;
 
       const fallback = window.setTimeout(() => {
         if (!initializedRef.current) onReady?.();
@@ -196,6 +203,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}
+          onError={() => onReady?.()}
           className="absolute inset-0 h-full w-full object-cover opacity-0"
         />
         <canvas

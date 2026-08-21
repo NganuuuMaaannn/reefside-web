@@ -9,6 +9,7 @@ type IntroLoaderProps = {
 };
 
 const MIN_INTRO_MS = 3000;
+const HARD_TIMEOUT_MS = 8000;
 
 export default function IntroLoader({ videoReady, onIntroComplete }: IntroLoaderProps) {
   const [minElapsed, setMinElapsed] = useState(false);
@@ -18,6 +19,12 @@ export default function IntroLoader({ videoReady, onIntroComplete }: IntroLoader
     const timer = window.setTimeout(() => setMinElapsed(true), MIN_INTRO_MS);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    const hardStop = window.setTimeout(() => setMinElapsed(true), HARD_TIMEOUT_MS);
+    return () => window.clearTimeout(hardStop);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;

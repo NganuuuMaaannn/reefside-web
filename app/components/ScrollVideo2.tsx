@@ -9,6 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd4-scrub.mp4';
+const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
 type ScrollVideo2Props = {
   triggerRef?: RefObject<HTMLElement | null>;
@@ -34,24 +35,36 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
 
   useEffect(() => {
     const video = videoRef.current;
-    const target = triggerRef?.current ?? wrapperRef.current;
-    if (!video || !target) return;
+    if (!video) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        if (video.dataset.fullLoaded === 'true') return;
-        video.dataset.fullLoaded = 'true';
-        video.preload = 'auto';
-        video.addEventListener('loadeddata', forceVideoLoad, { once: true });
-        video.load();
-        observer.disconnect();
-      },
-      { rootMargin: '0px 0px 200% 0px', threshold: 0 }
-    );
+    let observer: IntersectionObserver | null = null;
 
-    observer.observe(target);
-    return () => observer.disconnect();
+    const startObserving = () => {
+      const target = triggerRef?.current ?? wrapperRef.current;
+      if (!target || observer) return;
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          if (video.dataset.fullLoaded === 'true') return;
+          video.dataset.fullLoaded = 'true';
+          video.preload = 'auto';
+          video.addEventListener('loadeddata', forceVideoLoad, { once: true });
+          video.load();
+          observer?.disconnect();
+          observer = null;
+        },
+        { rootMargin: '0px 0px 200% 0px', threshold: 0 }
+      );
+
+      observer.observe(target);
+    };
+
+    startObserving();
+
+    return () => {
+      observer?.disconnect();
+    };
   }, [triggerRef]);
 
   useGSAP(
@@ -64,6 +77,9 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       let targetTime = 0;
       let renderedTime = 0;
       let lastSeekedTime = -1;
+      let durationRetries = 0;
+      const MAX_DURATION_RETRIES = 30;
+      let retryTimer = 0;
 
       const syncVideoTime = () => {
         const diff = targetTime - renderedTime;
@@ -95,6 +111,8 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
             durationRetries += 1;
             window.clearTimeout(retryTimer);
             retryTimer = window.setTimeout(initScrollScrub, 250);
+          } else {
+            onReady?.();
           }
           return;
         }
@@ -145,6 +163,11 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       };
 
       const captureFirstFrame = () => {
+        if (IS_MOBILE) {
+          initScrollScrub();
+          return;
+        }
+
         const draw = () => {
           try {
             const ctx = canvas.getContext('2d');
@@ -170,10 +193,6 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       const onMetadata = () => {
         captureFirstFrame();
       };
-
-      let durationRetries = 0;
-      const MAX_DURATION_RETRIES = 40;
-      let retryTimer = 0;
 
       const fallback = window.setTimeout(() => {
         if (!initializedRef.current) onReady?.();
@@ -212,6 +231,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}
+          onError={() => onReady?.()}
           className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0"
         />
         <canvas
