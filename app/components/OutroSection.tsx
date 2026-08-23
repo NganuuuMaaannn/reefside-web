@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,12 +75,12 @@ export default function OutroSection() {
     <div ref={wrapperRef} className="outro-section relative z-30 w-full">
       <div className="outro-fixed pointer-events-none fixed inset-0 z-0">
         <div className="outro-bg absolute inset-0 overflow-hidden">
-          <Image
+          <RobustImage
             src="/images/outro.jpg"
             alt="Reefside Surf Co. outro"
             fill
             sizes="100vw"
-            className="object-cover" 
+            className="object-cover"
           />
         </div>
         <div className="absolute inset-0 bg-black/60" />
@@ -88,7 +88,7 @@ export default function OutroSection() {
         <div className="pointer-events-auto absolute inset-0 flex items-center justify-center overflow-y-auto p-6 md:p-10 lg:p-16">
           <div className="flex flex-col items-center gap-8 sm:flex-row sm:gap-12 lg:gap-20">
             <div className="outro-item relative aspect-square h-auto w-[clamp(140px,22vw,280px)]">
-              <Image
+              <RobustImage
                 src="/images/reefside.png"
                 alt="Reefside"
                 fill

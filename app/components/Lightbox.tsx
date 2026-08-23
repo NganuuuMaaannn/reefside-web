@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 
 type LightboxValue = {
   src: string;
@@ -196,7 +196,7 @@ function LightboxOverlay({ value, closing, onClose }: LightboxOverlayProps) {
         </svg>
       </button>
 
-      <Image
+      <RobustImage
         src={value.src}
         alt={value.alt}
         width={1200}
