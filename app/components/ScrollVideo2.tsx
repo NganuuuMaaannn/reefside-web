@@ -204,6 +204,8 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       };
 
       video.addEventListener('loadedmetadata', onMetadata, { once: true });
+      // If the browser reports the video can play, try to initialize the scrub immediately.
+      video.addEventListener('canplay', initScrollScrub, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
       return () => {
@@ -213,11 +215,33 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         window.clearTimeout(fallback);
         window.clearTimeout(retryTimer);
         video.removeEventListener('loadedmetadata', onMetadata);
+        video.removeEventListener('canplay', initScrollScrub);
         video.removeEventListener('error', handleError);
       };
     },
     { dependencies: [triggerRef, onReady], scope: wrapperRef }
   );
+
+  // Keep ScrollTrigger in sync with common layout events (resize/orientation/pageshow/load).
+  useEffect(() => {
+    const doRefresh = () => {
+      try {
+        ScrollTrigger.refresh();
+      } catch {}
+    };
+
+    window.addEventListener('resize', doRefresh);
+    window.addEventListener('orientationchange', doRefresh);
+    window.addEventListener('pageshow', doRefresh);
+    window.addEventListener('load', doRefresh);
+
+    return () => {
+      window.removeEventListener('resize', doRefresh);
+      window.removeEventListener('orientationchange', doRefresh);
+      window.removeEventListener('pageshow', doRefresh);
+      window.removeEventListener('load', doRefresh);
+    };
+  }, []);
 
   return (
     <div ref={wrapperRef} className="relative z-0">
@@ -227,7 +251,8 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           muted
           playsInline
           webkit-playsinline="true"
-          preload="metadata"
+          preload="auto"
+          poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}

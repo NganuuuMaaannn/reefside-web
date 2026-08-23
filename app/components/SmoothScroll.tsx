@@ -62,10 +62,6 @@ export default function SmoothScroll({ disabled = false }: SmoothScrollProps) {
     const onWheel = (event: WheelEvent) => {
       if (event.ctrlKey || event.metaKey || event.shiftKey) return;
 
-      event.preventDefault();
-
-      if (disabledRef.current) return;
-
       const deltaMultiplier =
         event.deltaMode === WheelEvent.DOM_DELTA_LINE
           ? 18
@@ -73,7 +69,16 @@ export default function SmoothScroll({ disabled = false }: SmoothScrollProps) {
             ? window.innerHeight
             : 1;
 
-      targetY = clampScroll(targetY + event.deltaY * deltaMultiplier);
+      const delta = event.deltaY * deltaMultiplier;
+
+      // If the wheel/trackpad delta is very small, let native scrolling handle it
+      if (Math.abs(delta) < 4) return;
+
+      event.preventDefault();
+
+      if (disabledRef.current) return;
+
+      targetY = clampScroll(targetY + delta);
 
       if (!rafId) {
         currentY = window.scrollY;

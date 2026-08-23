@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 import ScrollVideo2 from './ScrollVideo2';
 import { LightboxButton } from './Lightbox';
 
@@ -80,17 +80,17 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
       <section className="relative w-full px-4 pt-12 pb-20 block md:hidden">
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
           <LightboxButton src="/images/reef10.jpg" alt="Reefside editorial hero" className="rounded-none">
-            <Image src="/images/reef10.jpg" alt="Reefside editorial hero" fill priority sizes="92vw" className="object-cover" />
+            <RobustImage src="/images/reef10.jpg" alt="Reefside editorial hero" fill priority sizes="92vw" className="object-cover" />
           </LightboxButton>
         </div>
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
           <LightboxButton src="/images/reef11.jpg" alt="Reefside editorial" className="rounded-none">
-            <Image src="/images/reef11.jpg" alt="Reefside editorial" fill sizes="92vw" className="object-cover" />
+            <RobustImage src="/images/reef11.jpg" alt="Reefside editorial" fill sizes="92vw" className="object-cover" />
           </LightboxButton>
         </div>
         <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-6" style={{ aspectRatio: '16/9' }}>
           <LightboxButton src="/images/reef12.jpg" alt="Reefside editorial landscape" className="rounded-none">
-            <Image src="/images/reef12.jpg" alt="Reefside editorial landscape" fill sizes="92vw" loading="eager" className="object-cover" />
+            <RobustImage src="/images/reef12.jpg" alt="Reefside editorial landscape" fill sizes="92vw" loading="eager" className="object-cover" />
           </LightboxButton>
         </div>
         <div className="ed-reveal opacity-0">

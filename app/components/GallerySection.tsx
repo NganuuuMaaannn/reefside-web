@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -87,13 +87,14 @@ export default function GallerySection() {
         <div className="relative z-10 mx-auto grid h-[min(72vh,760px)] w-full max-w-295 grid-cols-1 gap-4 md:grid-cols-[1.2fr_0.8fr] md:gap-5">
           <div className="gallery-frame relative overflow-hidden rounded-lg bg-[#111] opacity-0">
             <LightboxButton src={galleryImages[0].src} alt={galleryImages[0].alt} className="rounded-lg">
-              <Image
-                src={galleryImages[0].src}
-                alt={galleryImages[0].alt}
-                fill
-                sizes="(max-width: 768px) 100vw, 60vw"
-                className="object-cover"
-              />
+                  <RobustImage
+                    src={galleryImages[0].src}
+                    alt={galleryImages[0].alt}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 60vw"
+                    className="object-cover"
+                  />
             </LightboxButton>
           </div>
 
@@ -104,7 +105,7 @@ export default function GallerySection() {
                 className="gallery-frame relative min-h-0 overflow-hidden rounded-lg bg-[#111] opacity-0"
               >
                 <LightboxButton src={image.src} alt={image.alt} className="rounded-lg">
-                  <Image
+                  <RobustImage
                     src={image.src}
                     alt={image.alt}
                     fill

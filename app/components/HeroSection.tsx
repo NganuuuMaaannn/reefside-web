@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, type Variants } from 'framer-motion';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 import { LightboxButton } from './Lightbox';
 
 const introEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -62,7 +62,7 @@ export default function HeroSection({ introDone = false }: HeroSectionProps) {
         className="sticky top-0 flex min-h-screen flex-col items-center justify-center px-5 py-15 gap-15"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-1/2 overflow-hidden mask-[linear-gradient(to_bottom,black_0%,black_72%,transparent_100%)]">
-          <Image
+          <RobustImage
             src="/images/bg1.jpg"
             alt=""
             fill
@@ -93,7 +93,7 @@ export default function HeroSection({ introDone = false }: HeroSectionProps) {
               animate={introDone ? 'visible' : 'hidden'}
             >
               <LightboxButton src={image.src} alt={image.alt} className="rounded-xl">
-                <Image
+                <RobustImage
                   src={image.src}
                   alt={image.alt}
                   fill
