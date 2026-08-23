@@ -147,7 +147,7 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             alt="Reefside editorial hero"
             className="rounded-xl"
           >
-            <Image
+            <RobustImage
               src="/images/reef10.jpg"
               alt="Reefside editorial hero"
               fill
@@ -198,7 +198,7 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             alt="Reefside editorial"
             className="rounded-xl"
           >
-            <Image
+            <RobustImage
               src="/images/reef11.jpg"
               alt="Reefside editorial"
               fill
@@ -247,7 +247,7 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             alt="Reefside editorial landscape"
             className="rounded-xl"
           >
-            <Image
+            <RobustImage
               src="/images/reef12.jpg"
               alt="Reefside editorial landscape"
               fill

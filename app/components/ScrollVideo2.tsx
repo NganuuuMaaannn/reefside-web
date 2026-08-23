@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { logAssetFailure } from '../utils/instrumentation';
 import type { RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -200,6 +201,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       }, 5000);
       const handleError = () => {
         if (!initializedRef.current) onReady?.();
+        try { logAssetFailure({ ts: Date.now(), type: 'video', src: VIDEO_SRC }); } catch {}
         initScrollScrub();
       };
 
