@@ -162,7 +162,7 @@ function LightboxOverlay({ value, closing, onClose }: LightboxOverlayProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 md:p-10"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/90 p-4 md:p-10"
       style={{
         opacity: closing ? 0 : 1,
         transition: `opacity ${CLOSE_PICTURE_MS}ms ease-out ${
