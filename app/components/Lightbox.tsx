@@ -202,7 +202,6 @@ function LightboxOverlay({ value, closing, onClose }: LightboxOverlayProps) {
         width={1200}
         height={900}
         sizes="100vw"
-        priority
         onClick={(event) => event.stopPropagation()}
         style={{
           filter: showing ? 'blur(0px)' : 'blur(16px)',

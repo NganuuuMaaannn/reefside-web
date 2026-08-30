@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -17,22 +17,6 @@ type EditorialScrollProps = {
 export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!wrapperRef.current) return;
-      const elements = wrapperRef.current.querySelectorAll<HTMLElement>('.ed-reveal');
-      elements.forEach((el) => {
-        if (el.style.opacity === '0' || el.style.visibility === 'hidden') {
-          el.style.opacity = '1';
-          el.style.visibility = 'visible';
-          el.style.transform = 'none';
-          el.style.filter = 'none';
-        }
-      });
-    }, 6000);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   useGSAP(
     () => {
       if (!wrapperRef.current) return;
@@ -40,29 +24,21 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
       const elements = gsap.utils.toArray<HTMLElement>('.ed-reveal');
 
       elements.forEach((element) => {
-        gsap.fromTo(
-          element,
-          {
-            autoAlpha: 0,
-            y: 80,
-            scale: 1.04,
-            filter: 'blur(10px)',
+        gsap.set(element, { autoAlpha: 0, y: 80, scale: 1.04, filter: 'blur(10px)' });
+
+        gsap.to(element, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          filter: 'blur(0px)',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: element,
+            start: 'top 92%',
+            end: 'top 40%',
+            scrub: 0.6,
           },
-          {
-            autoAlpha: 1,
-            y: 0,
-            scale: 1,
-            filter: 'blur(0px)',
-            duration: 1.2,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: element,
-              start: 'top 90%',
-              end: 'top 55%',
-              scrub: 0.8,
-            },
-          }
-        );
+        });
       });
     },
     { scope: wrapperRef }
@@ -78,22 +54,22 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
 
       {/* ── MOBILE: vertical stack ── */}
       <section className="relative w-full px-4 pt-12 pb-20 block md:hidden">
-        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
+        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 mb-3" style={{ aspectRatio: '3/4' }}>
           <LightboxButton src="/images/reef10.jpg" alt="Reefside editorial hero" className="rounded-none">
-            <RobustImage src="/images/reef10.jpg" alt="Reefside editorial hero" fill priority sizes="92vw" className="object-cover" />
+            <RobustImage src="/images/reef10.jpg" alt="Reefside editorial hero" fill sizes="92vw" className="object-cover" />
           </LightboxButton>
         </div>
-        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-3" style={{ aspectRatio: '3/4' }}>
+        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 mb-3" style={{ aspectRatio: '3/4' }}>
           <LightboxButton src="/images/reef11.jpg" alt="Reefside editorial" className="rounded-none">
             <RobustImage src="/images/reef11.jpg" alt="Reefside editorial" fill sizes="92vw" className="object-cover" />
           </LightboxButton>
         </div>
-        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 opacity-0 mb-6" style={{ aspectRatio: '16/9' }}>
+        <div className="ed-reveal relative w-full overflow-hidden bg-gray-300 mb-6" style={{ aspectRatio: '16/9' }}>
           <LightboxButton src="/images/reef12.jpg" alt="Reefside editorial landscape" className="rounded-none">
             <RobustImage src="/images/reef12.jpg" alt="Reefside editorial landscape" fill sizes="92vw" loading="eager" className="object-cover" />
           </LightboxButton>
         </div>
-        <div className="ed-reveal opacity-0">
+        <div className="ed-reveal">
           <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-[#777]">Reefside Surf Co.</p>
           <h2 className="mb-4 font-serif text-[clamp(22px,5vw,36px)] leading-[1.1] tracking-[-0.02em] text-[#e8e8e8]">
             A homegrown Davao brand, inspired by the board-riding lifestyle created to share the stoke since 2006.
@@ -125,7 +101,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
           z-10
           overflow-hidden
           bg-gray-300
-          opacity-0
           rounded-xl
 
           right-0
@@ -151,14 +126,9 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
               src="/images/reef10.jpg"
               alt="Reefside editorial hero"
               fill
-              priority
               sizes="52vw"
               className="
                 object-cover
-                transition-transform
-                duration-1200
-                ease-out
-                hover:scale-99
                 rounded-xl
               "
             />
@@ -174,7 +144,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             z-20
             overflow-hidden
             bg-gray-300
-            opacity-0
             rounded-xl
 
             left-[4%]
@@ -205,10 +174,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
               sizes="24vw"
               className="
                 object-cover
-                transition-transform
-                duration-1200
-                ease-out
-                hover:scale-98
                 rounded-xl
               "
             />
@@ -224,7 +189,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             z-10
             overflow-hidden
             bg-gray-300
-            opacity-0
             rounded-xl
 
             left-[4%]
@@ -255,10 +219,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
               loading="eager"
               className="
                 object-cover
-                transition-transform
-                duration-1200
-                ease-out
-                hover:scale-99
                 rounded-xl
               "
             />
@@ -272,7 +232,6 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
             ed-reveal
             absolute
             z-20
-            opacity-0
 
             left-[50%]
             top-[65vh]

@@ -91,7 +91,6 @@ export default function GallerySection() {
                     src={galleryImages[0].src}
                     alt={galleryImages[0].alt}
                     fill
-                    priority
                     sizes="(max-width: 768px) 100vw, 60vw"
                     className="object-cover"
                   />

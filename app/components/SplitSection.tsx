@@ -89,7 +89,7 @@ export default function SplitSection() {
           className="grid w-full max-w-295 grid-cols-1 items-start gap-4 md:grid-cols-2 md:gap-5"
         >
           <motion.div
-            className="split-frame relative overflow-hidden rounded-xl bg-[#111] md:mt-20 lg:mt-24 duration-700 hover:scale-99"
+            className="split-frame relative overflow-hidden rounded-xl bg-[#111] md:mt-20 lg:mt-24"
             style={{
               aspectRatio: '4/5',
               opacity: leftOpacity,
@@ -109,7 +109,7 @@ export default function SplitSection() {
           </motion.div>
 
           <motion.div
-            className="split-frame relative overflow-hidden rounded-xl bg-[#111] duration-700 hover:scale-99"
+            className="split-frame relative overflow-hidden rounded-xl bg-[#111]"
             style={{
               aspectRatio: '4/5',
               opacity: rightOpacity,

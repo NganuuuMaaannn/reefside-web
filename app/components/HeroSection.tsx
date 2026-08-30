@@ -66,7 +66,6 @@ export default function HeroSection({ introDone = false }: HeroSectionProps) {
             src="/images/bg1.jpg"
             alt=""
             fill
-            priority
             sizes="100vw"
             className="object-cover"
             style={{ opacity: heroBackgroundOpacity }}
