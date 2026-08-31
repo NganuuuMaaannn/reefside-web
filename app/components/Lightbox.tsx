@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 
 type LightboxValue = {
   src: string;
@@ -129,6 +129,29 @@ export function LightboxProvider({ children }: LightboxProviderProps) {
     };
   }, [value, closeLightbox]);
 
+  // Expose debug keyboard: press D while lightbox open to download asset logs.
+  useEffect(() => {
+    if (!value) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'd') {
+        try {
+          const logs = localStorage.getItem('site:assetLogs') || '[]';
+          const blob = new Blob([logs], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'asset-logs.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        } catch {}
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [value]);
+
   const contextValue = useMemo(() => ({ openLightbox }), [openLightbox]);
 
   return (
@@ -196,7 +219,7 @@ function LightboxOverlay({ value, closing, onClose }: LightboxOverlayProps) {
         </svg>
       </button>
 
-      <Image
+      <RobustImage
         src={value.src}
         alt={value.alt}
         width={1200}

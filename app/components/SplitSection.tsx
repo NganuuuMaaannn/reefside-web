@@ -9,7 +9,7 @@ import {
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Image from 'next/image';
+import RobustImage from './RobustImage';
 import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -98,7 +98,7 @@ export default function SplitSection() {
             }}
           >
             <LightboxButton src="/images/reef15.jpg" alt="Reefside split one" className="rounded-xl">
-              <Image
+              <RobustImage
                 src="/images/reef15.jpg"
                 alt="Reefside split one"
                 fill
@@ -118,7 +118,7 @@ export default function SplitSection() {
             }}
           >
             <LightboxButton src="/images/reef16.jpg" alt="Reefside split two" className="rounded-xl">
-              <Image
+              <RobustImage
                 src="/images/reef16.jpg"
                 alt="Reefside split two"
                 fill
