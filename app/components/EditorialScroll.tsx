@@ -70,11 +70,11 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
           </LightboxButton>
         </div>
         <div className="ed-reveal">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-[#777]">Reefside Surf Co.</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-[#e8e8e8]">Reefside Surf Co.</p>
           <h2 className="mb-4 font-serif text-[clamp(22px,5vw,36px)] leading-[1.1] tracking-[-0.02em] text-[#e8e8e8]">
             A homegrown Davao brand, inspired by the board-riding lifestyle created to share the stoke since 2006.
           </h2>
-          <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-[#555]">Enjoy the Ride</p>
+          <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-[#e8e8e8]">Enjoy the Ride</p>
         </div>
       </section>
 

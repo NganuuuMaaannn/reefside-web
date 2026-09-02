@@ -67,6 +67,23 @@ export default function OutroSection() {
         },
         0.05
       );
+
+      const credits = wrapperRef.current.querySelector<HTMLElement>('.outro-credits');
+      if (credits) {
+        gsap.set(credits, { autoAlpha: 0, y: 20 });
+
+        gsap.to(credits, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: 'center 80%',
+            toggleActions: 'play none none none',
+          },
+        });
+      }
     },
     { scope: wrapperRef }
   );
@@ -80,7 +97,7 @@ export default function OutroSection() {
             alt="Reefside Surf Co. outro"
             fill
             sizes="100vw"
-            className="object-cover" 
+            className="object-cover"
           />
         </div>
         <div className="absolute inset-0 bg-black/60" />
@@ -155,6 +172,15 @@ export default function OutroSection() {
             </div>
           </div>
         </div>
+
+        <a
+          href="https://www.seanmichaeldoinog.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="outro-credits pointer-events-auto absolute bottom-4 right-4 z-10 text-[8px] uppercase tracking-[0.2em] text-white/40 transition-colors duration-300 hover:text-white/70 sm:bottom-6 sm:right-6 sm:text-[10px] md:text-[8px]"
+        >
+          Developed by Sean Doinog
+        </a>
       </div>
 
       <div className="h-[150vh]" aria-hidden="true" />
