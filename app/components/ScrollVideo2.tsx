@@ -10,8 +10,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd4-scrub.mp4';
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-const SEEK_THRESHOLD = IS_MOBILE ? 0.06 : 0.02;
-const LERP_FACTOR = IS_MOBILE ? 0.2 : 0.35;
 
 type ScrollVideo2Props = {
   triggerRef?: RefObject<HTMLElement | null>;
@@ -75,6 +73,88 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       const canvas = canvasRef.current;
       if (!video || !canvas) return;
 
+      if (IS_MOBILE) {
+        let lastSeekedTime = -1;
+        let seeking = false;
+        let durationRetries = 0;
+        const MAX_DURATION_RETRIES = 30;
+        let retryTimer = 0;
+
+        const seek = (time: number) => {
+          if (seeking) return;
+          if (Math.abs(time - lastSeekedTime) < 0.12) return;
+          seeking = true;
+          lastSeekedTime = time;
+          video.currentTime = time;
+        };
+
+        const onSeeking = () => { seeking = true; };
+        const onSeeked = () => { seeking = false; };
+        video.addEventListener('seeking', onSeeking);
+        video.addEventListener('seeked', onSeeked);
+
+        const initScrollScrub = () => {
+          if (initializedRef.current) return;
+
+          const dur = video.duration;
+          if (!isFinite(dur) || dur <= 0) {
+            if (durationRetries < MAX_DURATION_RETRIES) {
+              durationRetries += 1;
+              window.clearTimeout(retryTimer);
+              retryTimer = window.setTimeout(initScrollScrub, 250);
+            } else {
+              onReady?.();
+            }
+            return;
+          }
+          const finalTime = Math.max(0, dur - 0.05);
+
+          initializedRef.current = true;
+          lastSeekedTime = video.currentTime || 0;
+
+          ScrollTrigger.create({
+            trigger: triggerRef?.current ?? wrapperRef.current,
+            start: 'top top',
+            end: '+=400%',
+            scrub: 0.8,
+            onUpdate: (self) => {
+              const fadeIn = Math.max(0, Math.min(1, (self.progress - 0.15) / 0.35));
+              video.style.opacity = String(fadeIn);
+              seek(self.progress * finalTime);
+            },
+          });
+
+          onReady?.();
+          ScrollTrigger.refresh();
+
+          requestAnimationFrame(() => {
+            window.scrollBy(0, 2);
+            requestAnimationFrame(() => window.scrollBy(0, -2));
+          });
+        };
+
+        const fallback = window.setTimeout(() => {
+          if (!initializedRef.current) onReady?.();
+          initScrollScrub();
+        }, 5000);
+        const handleError = () => {
+          if (!initializedRef.current) onReady?.();
+          initScrollScrub();
+        };
+
+        video.addEventListener('loadedmetadata', () => initScrollScrub(), { once: true });
+        video.addEventListener('canplay', initScrollScrub, { once: true });
+        video.addEventListener('error', handleError, { once: true });
+
+        return () => {
+          window.clearTimeout(fallback);
+          window.clearTimeout(retryTimer);
+          video.removeEventListener('seeking', onSeeking);
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', handleError);
+        };
+      }
+
       let scrubRaf = 0;
       let targetTime = 0;
       let renderedTime = 0;
@@ -89,10 +169,10 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         if (Math.abs(diff) < 0.008) {
           renderedTime = targetTime;
         } else {
-          renderedTime += diff * LERP_FACTOR;
+          renderedTime += diff * 0.35;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > SEEK_THRESHOLD) {
+        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
@@ -136,39 +216,20 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
 
-            if (IS_MOBILE) {
-              const fadeIn = Math.max(0, Math.min(1, (self.progress - 0.15) / 0.35));
-              if (canvasHidden) {
-                video.style.opacity = String(fadeIn);
-              } else {
-                video.style.opacity = String(fadeIn);
-                canvas.style.opacity = String(fadeIn);
-              }
-
-              if (!scrubRaf) {
-                scrubRaf = requestAnimationFrame(syncVideoTime);
-              }
-
-              if (!canvasHidden && self.progress > 0.01) {
-                canvasHidden = true;
-                canvas.style.opacity = '0';
-              }
+            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
+            if (canvasHidden) {
+              gsap.set(video, { opacity: fadeIn });
             } else {
-              const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
-              if (canvasHidden) {
-                gsap.set(video, { opacity: fadeIn });
-              } else {
-                gsap.set([video, canvas], { opacity: fadeIn });
-              }
+              gsap.set([video, canvas], { opacity: fadeIn });
+            }
 
-              if (!scrubRaf) {
-                scrubRaf = requestAnimationFrame(syncVideoTime);
-              }
+            if (!scrubRaf) {
+              scrubRaf = requestAnimationFrame(syncVideoTime);
+            }
 
-              if (!canvasHidden && self.progress > 0.01) {
-                canvasHidden = true;
-                gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
-              }
+            if (!canvasHidden && self.progress > 0.01) {
+              canvasHidden = true;
+              gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
             }
           },
         });
@@ -183,36 +244,28 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         });
       };
 
-      const captureFirstFrame = () => {
-        if (IS_MOBILE) {
-          initScrollScrub();
-          return;
-        }
-
-        const draw = () => {
-          try {
-            const ctx = canvas.getContext('2d');
-            if (ctx && video.videoWidth && video.videoHeight) {
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-              ctx.drawImage(video, 0, 0);
-              return true;
-            }
-          } catch {}
-          return false;
-        };
-
-        const onSeeked = () => {
-          draw();
-          initScrollScrub();
-        };
-
-        video.addEventListener('seeked', onSeeked, { once: true });
-        video.currentTime = 0.1;
+      const draw = () => {
+        try {
+          const ctx = canvas.getContext('2d');
+          if (ctx && video.videoWidth && video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            return true;
+          }
+        } catch {}
+        return false;
       };
 
+      const onSeeked = () => {
+        draw();
+        initScrollScrub();
+      };
+
+      video.addEventListener('seeked', onSeeked, { once: true });
+      video.currentTime = 0.1;
+
       const onMetadata = () => {
-        captureFirstFrame();
       };
 
       const fallback = window.setTimeout(() => {
@@ -225,7 +278,6 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       };
 
       video.addEventListener('loadedmetadata', onMetadata, { once: true });
-      // If the browser reports the video can play, try to initialize the scrub immediately.
       video.addEventListener('canplay', initScrollScrub, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
@@ -243,7 +295,6 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
     { dependencies: [triggerRef, onReady], scope: wrapperRef }
   );
 
-  // Keep ScrollTrigger in sync with common layout events (resize/orientation/pageshow/load).
   useEffect(() => {
     const doRefresh = () => {
       try {
@@ -278,7 +329,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           disablePictureInPicture
           src={VIDEO_SRC}
           onError={() => onReady?.()}
-          className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0 will-change-[opacity]"
+          className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0"
         />
         <canvas
           ref={canvasRef}

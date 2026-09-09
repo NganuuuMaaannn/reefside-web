@@ -9,8 +9,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd2-scrub.mp4';
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-const SEEK_THRESHOLD = IS_MOBILE ? 0.06 : 0.02;
-const LERP_FACTOR = IS_MOBILE ? 0.2 : 0.35;
 
 type ScrollVideoProps = {
   onReady?: () => void;
@@ -30,6 +28,103 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       const overlay = overlayRef.current;
       if (!video || !canvas || !overlay) return;
 
+      if (IS_MOBILE) {
+        let lastSeekedTime = -1;
+        let seeking = false;
+        let durationRetries = 0;
+        const MAX_DURATION_RETRIES = 30;
+        let retryTimer = 0;
+
+        const seek = (time: number) => {
+          if (seeking) return;
+          if (Math.abs(time - lastSeekedTime) < 0.12) return;
+          seeking = true;
+          lastSeekedTime = time;
+          video.currentTime = time;
+        };
+
+        const onSeeking = () => { seeking = true; };
+        const onSeeked = () => { seeking = false; };
+        video.addEventListener('seeking', onSeeking);
+        video.addEventListener('seeked', onSeeked);
+
+        const initScrollScrub = () => {
+          if (initializedRef.current) return;
+
+          const dur = video.duration;
+          if (!isFinite(dur) || dur <= 0) {
+            if (durationRetries < MAX_DURATION_RETRIES) {
+              durationRetries += 1;
+              window.clearTimeout(retryTimer);
+              retryTimer = window.setTimeout(initScrollScrub, 250);
+            } else {
+              onReady?.();
+            }
+            return;
+          }
+          const finalTime = Math.max(0, dur - 0.05);
+
+          initializedRef.current = true;
+          lastSeekedTime = video.currentTime || 0;
+
+          gsap.set([video, canvas], { opacity: 0.82 });
+
+          ScrollTrigger.create({
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: '+=400%',
+            scrub: 0.8,
+            onUpdate: (self) => {
+              const t = self.progress * finalTime;
+
+              if (self.progress > 0.985) {
+                seek(finalTime);
+                overlay.style.opacity = '1';
+              } else {
+                const reveal = Math.max(0, Math.min(1, (self.progress - 0.03) / 0.18));
+                const dip = Math.max(0, Math.min(1, (self.progress - 0.72) / 0.18));
+                overlay.style.opacity = String(Math.max(1 - reveal, dip));
+                seek(t);
+              }
+            },
+          });
+
+          onReady?.();
+          ScrollTrigger.refresh();
+
+          requestAnimationFrame(() => {
+            window.scrollBy(0, 2);
+            requestAnimationFrame(() => window.scrollBy(0, -2));
+          });
+        };
+
+        const fallback = window.setTimeout(() => {
+          if (!initializedRef.current) onReady?.();
+          initScrollScrub();
+        }, 5000);
+        const handleError = () => {
+          if (!initializedRef.current) onReady?.();
+          initScrollScrub();
+        };
+
+        video.addEventListener('loadedmetadata', () => initScrollScrub(), { once: true });
+        video.addEventListener('canplay', initScrollScrub, { once: true });
+        video.addEventListener('error', handleError, { once: true });
+
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => video.pause()).catch(() => {});
+        }
+
+        return () => {
+          window.clearTimeout(fallback);
+          window.clearTimeout(retryTimer);
+          video.removeEventListener('seeking', onSeeking);
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('error', handleError);
+        };
+      }
+
       let scrubRaf = 0;
       let targetTime = 0;
       let renderedTime = 0;
@@ -44,10 +139,10 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         if (Math.abs(diff) < 0.008) {
           renderedTime = targetTime;
         } else {
-          renderedTime += diff * LERP_FACTOR;
+          renderedTime += diff * 0.35;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > SEEK_THRESHOLD) {
+        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
@@ -92,50 +187,26 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           scrub: true,
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
+            const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
+            const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
 
-            if (IS_MOBILE) {
-              if (self.progress > 0.985) {
-                targetTime = finalTime;
-                renderedTime = finalTime;
-                lastSeekedTime = finalTime;
-                video.currentTime = finalTime;
-                overlay.style.opacity = '1';
-              } else {
-                const reveal = Math.max(0, Math.min(1, (self.progress - 0.03) / 0.18));
-                const dip = Math.max(0, Math.min(1, (self.progress - 0.72) / 0.18));
-                overlay.style.opacity = String(Math.max(1 - reveal, dip));
-              }
-
-              if (!scrubRaf) {
-                scrubRaf = requestAnimationFrame(syncVideoTime);
-              }
-
-              if (!canvasHidden && self.progress > 0.01) {
-                canvasHidden = true;
-                canvas.style.opacity = '0';
-              }
+            if (self.progress > 0.985) {
+              targetTime = finalTime;
+              renderedTime = finalTime;
+              lastSeekedTime = finalTime;
+              video.currentTime = finalTime;
+              gsap.set(overlay, { opacity: 1 });
             } else {
-              const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
-              const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
+              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
+            }
 
-              if (self.progress > 0.985) {
-                targetTime = finalTime;
-                renderedTime = finalTime;
-                lastSeekedTime = finalTime;
-                video.currentTime = finalTime;
-                gsap.set(overlay, { opacity: 1 });
-              } else {
-                gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
-              }
+            if (!scrubRaf) {
+              scrubRaf = requestAnimationFrame(syncVideoTime);
+            }
 
-              if (!scrubRaf) {
-                scrubRaf = requestAnimationFrame(syncVideoTime);
-              }
-
-              if (!canvasHidden && self.progress > 0) {
-                canvasHidden = true;
-                gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
-              }
+            if (!canvasHidden && self.progress > 0) {
+              canvasHidden = true;
+              gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
             }
           },
         });
@@ -150,33 +221,26 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         });
       };
 
-      const captureFirstFrame = () => {
-        if (IS_MOBILE) {
-          initScrollScrub();
-          return;
-        }
-
-        const draw = () => {
-          try {
-            const ctx = canvas.getContext('2d');
-            if (ctx && video.videoWidth && video.videoHeight) {
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-              ctx.drawImage(video, 0, 0);
-              return true;
-            }
-          } catch {}
-          return false;
-        };
-
-        const onSeeked = () => {
-          draw();
-          initScrollScrub();
-        };
-
-        video.addEventListener('seeked', onSeeked, { once: true });
-        video.currentTime = 0.1;
+      const draw = () => {
+        try {
+          const ctx = canvas.getContext('2d');
+          if (ctx && video.videoWidth && video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            return true;
+          }
+        } catch {}
+        return false;
       };
+
+      const onSeeked = () => {
+        draw();
+        initScrollScrub();
+      };
+
+      video.addEventListener('seeked', onSeeked, { once: true });
+      video.currentTime = 0.1;
 
       const forceLoad = () => {
         const playPromise = video.play();
@@ -189,7 +253,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
 
       const onMetadata = () => {
         forceLoad();
-        captureFirstFrame();
       };
 
       const fallback = window.setTimeout(() => {
@@ -202,7 +265,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       };
 
       video.addEventListener('loadedmetadata', onMetadata, { once: true });
-      // Also init when the browser indicates the video can play to reduce race conditions
       video.addEventListener('canplay', initScrollScrub, { once: true });
       video.addEventListener('error', handleError, { once: true });
 
@@ -220,7 +282,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
     { dependencies: [onReady], scope: wrapperRef }
   );
 
-  // Refresh ScrollTrigger on common layout events to keep scrub mapping accurate.
   useEffect(() => {
     const doRefresh = () => {
       try {
@@ -255,7 +316,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           disablePictureInPicture
           src={VIDEO_SRC}
           onError={() => onReady?.()}
-          className="absolute inset-0 h-full w-full object-cover opacity-0 will-change-[opacity]"
+          className="absolute inset-0 h-full w-full object-cover opacity-0"
         />
         <canvas
           ref={canvasRef}
