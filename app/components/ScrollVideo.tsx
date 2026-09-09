@@ -9,6 +9,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd2-scrub.mp4';
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const SEEK_THRESHOLD = IS_MOBILE ? 0.06 : 0.02;
+const LERP_FACTOR = IS_MOBILE ? 0.2 : 0.35;
 
 type ScrollVideoProps = {
   onReady?: () => void;
@@ -42,10 +44,10 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         if (Math.abs(diff) < 0.008) {
           renderedTime = targetTime;
         } else {
-          renderedTime += diff * 0.35;
+          renderedTime += diff * LERP_FACTOR;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
+        if (Math.abs(renderedTime - lastSeekedTime) > SEEK_THRESHOLD) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
@@ -90,26 +92,50 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           scrub: true,
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
-            const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
-            const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
 
-            if (self.progress > 0.985) {
-              targetTime = finalTime;
-              renderedTime = finalTime;
-              lastSeekedTime = finalTime;
-              video.currentTime = finalTime;
-              gsap.set(overlay, { opacity: 1 });
+            if (IS_MOBILE) {
+              if (self.progress > 0.985) {
+                targetTime = finalTime;
+                renderedTime = finalTime;
+                lastSeekedTime = finalTime;
+                video.currentTime = finalTime;
+                overlay.style.opacity = '1';
+              } else {
+                const reveal = Math.max(0, Math.min(1, (self.progress - 0.03) / 0.18));
+                const dip = Math.max(0, Math.min(1, (self.progress - 0.72) / 0.18));
+                overlay.style.opacity = String(Math.max(1 - reveal, dip));
+              }
+
+              if (!scrubRaf) {
+                scrubRaf = requestAnimationFrame(syncVideoTime);
+              }
+
+              if (!canvasHidden && self.progress > 0.01) {
+                canvasHidden = true;
+                canvas.style.opacity = '0';
+              }
             } else {
-              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
-            }
+              const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
+              const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
 
-            if (!scrubRaf) {
-              scrubRaf = requestAnimationFrame(syncVideoTime);
-            }
+              if (self.progress > 0.985) {
+                targetTime = finalTime;
+                renderedTime = finalTime;
+                lastSeekedTime = finalTime;
+                video.currentTime = finalTime;
+                gsap.set(overlay, { opacity: 1 });
+              } else {
+                gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
+              }
 
-            if (!canvasHidden && self.progress > 0) {
-              canvasHidden = true;
-              gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
+              if (!scrubRaf) {
+                scrubRaf = requestAnimationFrame(syncVideoTime);
+              }
+
+              if (!canvasHidden && self.progress > 0) {
+                canvasHidden = true;
+                gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
+              }
             }
           },
         });
@@ -223,13 +249,13 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           muted
           playsInline
           webkit-playsinline="true"
-          preload="auto"
+          preload={IS_MOBILE ? 'metadata' : 'auto'}
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}
           onError={() => onReady?.()}
-          className="absolute inset-0 h-full w-full object-cover opacity-0"
+          className="absolute inset-0 h-full w-full object-cover opacity-0 will-change-[opacity]"
         />
         <canvas
           ref={canvasRef}

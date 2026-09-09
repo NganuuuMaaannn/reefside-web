@@ -10,6 +10,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 const VIDEO_SRC = '/video/ripsayd4-scrub.mp4';
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const SEEK_THRESHOLD = IS_MOBILE ? 0.06 : 0.02;
+const LERP_FACTOR = IS_MOBILE ? 0.2 : 0.35;
 
 type ScrollVideo2Props = {
   triggerRef?: RefObject<HTMLElement | null>;
@@ -54,7 +56,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           observer?.disconnect();
           observer = null;
         },
-        { rootMargin: '0px 0px 200% 0px', threshold: 0 }
+        { rootMargin: IS_MOBILE ? '0px 0px 50% 0px' : '0px 0px 200% 0px', threshold: 0 }
       );
 
       observer.observe(target);
@@ -87,10 +89,10 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         if (Math.abs(diff) < 0.008) {
           renderedTime = targetTime;
         } else {
-          renderedTime += diff * 0.35;
+          renderedTime += diff * LERP_FACTOR;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
+        if (Math.abs(renderedTime - lastSeekedTime) > SEEK_THRESHOLD) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
@@ -134,20 +136,39 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           onUpdate: (self) => {
             targetTime = self.progress * finalTime;
 
-            const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
-            if (canvasHidden) {
-              gsap.set(video, { opacity: fadeIn });
+            if (IS_MOBILE) {
+              const fadeIn = Math.max(0, Math.min(1, (self.progress - 0.15) / 0.35));
+              if (canvasHidden) {
+                video.style.opacity = String(fadeIn);
+              } else {
+                video.style.opacity = String(fadeIn);
+                canvas.style.opacity = String(fadeIn);
+              }
+
+              if (!scrubRaf) {
+                scrubRaf = requestAnimationFrame(syncVideoTime);
+              }
+
+              if (!canvasHidden && self.progress > 0.01) {
+                canvasHidden = true;
+                canvas.style.opacity = '0';
+              }
             } else {
-              gsap.set([video, canvas], { opacity: fadeIn });
-            }
+              const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
+              if (canvasHidden) {
+                gsap.set(video, { opacity: fadeIn });
+              } else {
+                gsap.set([video, canvas], { opacity: fadeIn });
+              }
 
-            if (!scrubRaf) {
-              scrubRaf = requestAnimationFrame(syncVideoTime);
-            }
+              if (!scrubRaf) {
+                scrubRaf = requestAnimationFrame(syncVideoTime);
+              }
 
-            if (!canvasHidden && self.progress > 0.01) {
-              canvasHidden = true;
-              gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
+              if (!canvasHidden && self.progress > 0.01) {
+                canvasHidden = true;
+                gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
+              }
             }
           },
         });
@@ -251,13 +272,13 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           muted
           playsInline
           webkit-playsinline="true"
-          preload="auto"
+          preload={IS_MOBILE ? 'metadata' : 'auto'}
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
           src={VIDEO_SRC}
           onError={() => onReady?.()}
-          className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0"
+          className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0 will-change-[opacity]"
         />
         <canvas
           ref={canvasRef}
