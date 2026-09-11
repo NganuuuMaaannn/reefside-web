@@ -14,6 +14,8 @@ import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 export default function SplitSection() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ export default function SplitSection() {
   const leftBlur = useTransform(
     scrollYProgress,
     [0, 0.55],
-    ['blur(10px)', 'blur(0px)']
+    IS_MOBILE ? ['none', 'none'] : ['blur(10px)', 'blur(0px)']
   );
 
   const rightOpacity = useTransform(
@@ -78,7 +80,7 @@ export default function SplitSection() {
   const rightBlur = useTransform(
     scrollYProgress,
     [0.12, 0.67],
-    ['blur(10px)', 'blur(0px)']
+    IS_MOBILE ? ['none', 'none'] : ['blur(10px)', 'blur(0px)']
   );
 
   return (

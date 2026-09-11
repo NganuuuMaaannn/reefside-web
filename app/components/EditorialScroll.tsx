@@ -10,6 +10,8 @@ import { LightboxButton } from './Lightbox';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 type EditorialScrollProps = {
   onVideoReady?: () => void;
 };
@@ -24,13 +26,13 @@ export default function EditorialScroll({ onVideoReady }: EditorialScrollProps) 
       const elements = gsap.utils.toArray<HTMLElement>('.ed-reveal');
 
       elements.forEach((element) => {
-        gsap.set(element, { autoAlpha: 0, y: 80, scale: 1.04, filter: 'blur(10px)' });
+        gsap.set(element, { autoAlpha: 0, y: 80, scale: 1.04, filter: IS_MOBILE ? 'none' : 'blur(10px)' });
 
         gsap.to(element, {
           autoAlpha: 1,
           y: 0,
           scale: 1,
-          filter: 'blur(0px)',
+          filter: IS_MOBILE ? 'none' : 'blur(0px)',
           ease: 'none',
           scrollTrigger: {
             trigger: element,

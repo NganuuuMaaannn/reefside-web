@@ -60,6 +60,13 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       let seekPendingTime: number | null = null;
       let seekDeadline = 0;
 
+      const playInline = () => {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      };
+
       const requestSeek = (time: number) => {
         if (seekInFlight) {
           seekPendingTime = time; // newest request wins; applied on 'seeked'
@@ -160,6 +167,33 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
         const smoothStep = (progress: number) => progress * progress * (3 - 2 * progress);
 
         gsap.set([video, canvas], { opacity: 0.82 });
+
+        if (IS_MOBILE) {
+          ScrollTrigger.create({
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: '+=400%',
+            onEnter: playInline,
+            onEnterBack: playInline,
+            onLeave: () => video.pause(),
+            onLeaveBack: () => video.pause(),
+            onUpdate: (self) => {
+              const revealProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.03) / 0.18));
+              const dipProgress = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.72) / 0.18));
+              gsap.set(overlay, { opacity: Math.max(1 - revealProgress, dipProgress) });
+
+              if (!canvasHidden && self.progress > 0) {
+                canvasHidden = true;
+                gsap.to(canvas, { opacity: 0, duration: 0.2, ease: 'power1.out' });
+              }
+            },
+          });
+
+          playInline();
+          onReady?.();
+          ScrollTrigger.refresh();
+          return;
+        }
 
         ScrollTrigger.create({
           trigger: wrapperRef.current,
@@ -299,6 +333,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
           playsInline
           webkit-playsinline="true"
           preload="auto"
+          loop={IS_MOBILE}
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture

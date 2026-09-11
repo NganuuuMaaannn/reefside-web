@@ -119,6 +119,13 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       let seekPendingTime: number | null = null;
       let seekDeadline = 0;
 
+      const playInline = () => {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      };
+
       const requestSeek = (time: number) => {
         if (seekInFlight) {
           seekPendingTime = time; // newest request wins; applied on 'seeked'
@@ -217,6 +224,36 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
 
         let canvasHidden = false;
         const smoothStep = (progress: number) => progress * progress * (3 - 2 * progress);
+
+        if (IS_MOBILE) {
+          ScrollTrigger.create({
+            trigger: triggerRef?.current ?? wrapperRef.current,
+            start: 'top top',
+            end: '+=400%',
+            onEnter: playInline,
+            onEnterBack: playInline,
+            onLeave: () => video.pause(),
+            onLeaveBack: () => video.pause(),
+            onUpdate: (self) => {
+              const fadeIn = smoothStep(gsap.utils.clamp(0, 1, (self.progress - 0.15) / 0.35));
+              if (canvasHidden) {
+                gsap.set(video, { opacity: fadeIn });
+              } else {
+                gsap.set([video, canvas], { opacity: fadeIn });
+              }
+
+              if (!canvasHidden && self.progress > 0.01) {
+                canvasHidden = true;
+                gsap.to(canvas, { opacity: 0, duration: 0.3, ease: 'power1.out' });
+              }
+            },
+          });
+
+          playInline();
+          onReady?.();
+          ScrollTrigger.refresh();
+          return;
+        }
 
         ScrollTrigger.create({
           trigger: triggerRef?.current ?? wrapperRef.current,
@@ -336,6 +373,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           playsInline
           webkit-playsinline="true"
           preload={shouldLoad ? 'auto' : 'none'}
+          loop={IS_MOBILE}
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
