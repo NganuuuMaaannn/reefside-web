@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -25,6 +25,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const initializedRef = useRef(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   const forceVideoLoad = () => {
     const video = videoRef.current;
@@ -40,6 +41,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    if (shouldLoad) return;
 
     let observer: IntersectionObserver | null = null;
 
@@ -52,13 +54,11 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           if (!entries.some((entry) => entry.isIntersecting)) return;
           if (video.dataset.fullLoaded === 'true') return;
           video.dataset.fullLoaded = 'true';
-          video.preload = 'auto';
-          video.addEventListener('loadeddata', forceVideoLoad, { once: true });
-          video.load();
+          setShouldLoad(true);
           observer?.disconnect();
           observer = null;
         },
-        { rootMargin: IS_MOBILE ? '0px 0px 50% 0px' : '0px 0px 200% 0px', threshold: 0 }
+        { rootMargin: IS_MOBILE ? '0px 0px 150% 0px' : '0px 0px 200% 0px', threshold: 0 }
       );
 
       observer.observe(target);
@@ -69,12 +69,26 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
     return () => {
       observer?.disconnect();
     };
-  }, [triggerRef]);
+  }, [shouldLoad, triggerRef]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return;
+
+    video.preload = 'auto';
+    video.addEventListener('loadeddata', forceVideoLoad, { once: true });
+    video.load();
+
+    return () => {
+      video.removeEventListener('loadeddata', forceVideoLoad);
+    };
+  }, [shouldLoad]);
 
   useGSAP(
     () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      if (!shouldLoad) return;
       if (!video || !canvas) return;
 
       // Note: both desktop and mobile use the throttled RAF-eased scrub loop below.
@@ -100,7 +114,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       // the target smoothly on every device — only the seek *issue rate* is
       // throttled to the decoder's actual throughput.
 
-      const SEEK_GAP = IS_MOBILE ? 0.012 : 0.03;
+      const SEEK_GAP = IS_MOBILE ? 0.04 : 0.03;
       let seekInFlight = false;
       let seekPendingTime: number | null = null;
       let seekDeadline = 0;
@@ -113,7 +127,6 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
 
         const diff = Math.abs(time - lastSeekedTime);
         if (diff < SEEK_GAP) {
-          lastSeekedTime = time; // within tolerance, no decoder work needed
           return;
         }
 
@@ -291,7 +304,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         video.removeEventListener('error', handleError);
       };
     },
-    { dependencies: [triggerRef, onReady], scope: wrapperRef }
+    { dependencies: [triggerRef, onReady, shouldLoad], scope: wrapperRef }
   );
 
   useEffect(() => {
@@ -322,11 +335,11 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           muted
           playsInline
           webkit-playsinline="true"
-          preload="auto"
+          preload={shouldLoad ? 'auto' : 'none'}
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
-          src={VIDEO_SRC}
+          src={shouldLoad ? VIDEO_SRC : undefined}
           onError={() => onReady?.()}
           className="scrollvid2-video absolute inset-0 h-full w-full object-cover opacity-0"
         />

@@ -55,7 +55,7 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
       // the target smoothly on every device — only the seek *issue rate* is
       // throttled to the decoder's actual throughput.
 
-      const SEEK_GAP = IS_MOBILE ? 0.012 : 0.03;
+      const SEEK_GAP = IS_MOBILE ? 0.04 : 0.03;
       let seekInFlight = false;
       let seekPendingTime: number | null = null;
       let seekDeadline = 0;
@@ -68,7 +68,6 @@ export default function ScrollVideo({ onReady }: ScrollVideoProps) {
 
         const diff = Math.abs(time - lastSeekedTime);
         if (diff < SEEK_GAP) {
-          lastSeekedTime = time; // within tolerance, no decoder work needed
           return;
         }
 
