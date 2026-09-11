@@ -8,8 +8,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const VIDEO_SRC = '/video/ripsayd4-scrub.mp4';
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+// On touch devices use a ~720p, short-keyframe (0.5s) re-encode (~20x smaller)
+// so each seek decodes far fewer pixels and at most one keyframe interval.
+const VIDEO_SRC = IS_MOBILE
+  ? '/video/ripsayd4-scrub-mobile.mp4'
+  : '/video/ripsayd4-scrub.mp4';
 
 type ScrollVideo2Props = {
   triggerRef?: RefObject<HTMLElement | null>;
@@ -86,6 +90,59 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       const MAX_DURATION_RETRIES = 30;
       let retryTimer = 0;
 
+      // ── Seek-serialized pacing ─────────────────────────────────────────────
+      // Writing `video.currentTime` forces the decoder to seek. If we issue a new
+      // seek before the previous one finishes, browsers override the in-flight
+      // seek and the decoder falls behind → stutter and perceived lag. So we
+      // serialize: start a seek only when none is in flight, remember the newest
+      // requested time meanwhile, and flush it once the current seek completes.
+      // The RAF loop stays alive the whole time so scrolling keeps easing toward
+      // the target smoothly on every device — only the seek *issue rate* is
+      // throttled to the decoder's actual throughput.
+
+      const SEEK_GAP = 0.03;
+      let seekInFlight = false;
+      let seekPendingTime: number | null = null;
+      let seekDeadline = 0;
+
+      const requestSeek = (time: number) => {
+        if (seekInFlight) {
+          seekPendingTime = time; // newest request wins; applied on 'seeked'
+          return;
+        }
+
+        const diff = Math.abs(time - lastSeekedTime);
+        if (diff < SEEK_GAP) {
+          lastSeekedTime = time; // within tolerance, no decoder work needed
+          return;
+        }
+
+        seekInFlight = true;
+        lastSeekedTime = time;
+        window.clearTimeout(seekDeadline);
+        // Safety net: never let a dropped 'seeked' event lock the scrub forever.
+        seekDeadline = window.setTimeout(() => {
+          seekInFlight = false;
+        }, 500);
+
+        video.currentTime = time;
+      };
+
+      const onLockedSeeked = () => {
+        window.clearTimeout(seekDeadline);
+        seekInFlight = false;
+      };
+
+      video.addEventListener('seeked', onLockedSeeked);
+
+      // ── Scrub loop ─────────────────────────────────────────────────────────
+      // Desktop keeps the original eager strategy: write `currentTime` every
+      // eased frame and let the browser coalesce the rapid writes into a single
+      // seek toward the newest position. That avoids decoding intermediate
+      // frames and stays perfectly smooth on fast decoders. On touch devices we
+      // serialize instead (one seek in flight, newest target banked) because a
+      // phone decoder can't absorb uncoalesced seeks — combined with the ~720p
+      // short-keyframe mobile file, each seek now costs very little.
       const syncVideoTime = () => {
         const diff = targetTime - renderedTime;
 
@@ -95,12 +152,15 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           renderedTime += diff * 0.35;
         }
 
-        if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
+        if (IS_MOBILE) {
+          requestSeek(renderedTime);
+        } else if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
           lastSeekedTime = renderedTime;
           video.currentTime = renderedTime;
         }
 
-        if (Math.abs(targetTime - renderedTime) > 0.008) {
+        const stillMoving = Math.abs(targetTime - renderedTime) > 0.008;
+        if (stillMoving || (IS_MOBILE && (seekInFlight || seekPendingTime !== null))) {
           scrubRaf = requestAnimationFrame(syncVideoTime);
         } else {
           scrubRaf = 0;
@@ -210,6 +270,8 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
         }
         window.clearTimeout(fallback);
         window.clearTimeout(retryTimer);
+        window.clearTimeout(seekDeadline);
+        video.removeEventListener('seeked', onLockedSeeked);
         video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('canplay', initScrollScrub);
         video.removeEventListener('error', handleError);
