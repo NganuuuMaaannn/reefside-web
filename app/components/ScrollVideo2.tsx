@@ -9,8 +9,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const IS_MOBILE = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
-// On touch devices use a ~720p, short-keyframe (0.5s) re-encode (~20x smaller)
-// so each seek decodes far fewer pixels and at most one keyframe interval.
+// On touch devices use a ~720p, short-keyframe (0.125s) re-encode (~10-20x
+// smaller) so each seek decodes far fewer pixels and at most one keyframe interval.
 const VIDEO_SRC = IS_MOBILE
   ? '/video/ripsayd4-scrub-mobile.mp4'
   : '/video/ripsayd4-scrub.mp4';
@@ -100,7 +100,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       // the target smoothly on every device — only the seek *issue rate* is
       // throttled to the decoder's actual throughput.
 
-      const SEEK_GAP = 0.03;
+      const SEEK_GAP = IS_MOBILE ? 0.012 : 0.03;
       let seekInFlight = false;
       let seekPendingTime: number | null = null;
       let seekDeadline = 0;
@@ -131,6 +131,14 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       const onLockedSeeked = () => {
         window.clearTimeout(seekDeadline);
         seekInFlight = false;
+
+        // Flush the newest pending target immediately instead of waiting for the
+        // next RAF tick — this closes a frame of perceived lag on slow devices.
+        if (seekPendingTime !== null) {
+          const next = seekPendingTime;
+          seekPendingTime = null;
+          requestSeek(next);
+        }
       };
 
       video.addEventListener('seeked', onLockedSeeked);
@@ -144,19 +152,25 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       // phone decoder can't absorb uncoalesced seeks — combined with the ~720p
       // short-keyframe mobile file, each seek now costs very little.
       const syncVideoTime = () => {
-        const diff = targetTime - renderedTime;
-
-        if (Math.abs(diff) < 0.008) {
-          renderedTime = targetTime;
-        } else {
-          renderedTime += diff * 0.35;
-        }
-
         if (IS_MOBILE) {
+          // No easing on touch devices: easing leaves the video chasing the
+          // finger while a seek is decoding, which reads as lag. Snap straight
+          // to the current scroll target so every issued seek tracks the finger.
+          renderedTime = targetTime;
           requestSeek(renderedTime);
-        } else if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
-          lastSeekedTime = renderedTime;
-          video.currentTime = renderedTime;
+        } else {
+          const diff = targetTime - renderedTime;
+
+          if (Math.abs(diff) < 0.008) {
+            renderedTime = targetTime;
+          } else {
+            renderedTime += diff * 0.35;
+          }
+
+          if (Math.abs(renderedTime - lastSeekedTime) > 0.02) {
+            lastSeekedTime = renderedTime;
+            video.currentTime = renderedTime;
+          }
         }
 
         const stillMoving = Math.abs(targetTime - renderedTime) > 0.008;
@@ -308,7 +322,7 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
           muted
           playsInline
           webkit-playsinline="true"
-          preload={IS_MOBILE ? 'metadata' : 'auto'}
+          preload="auto"
           poster="/images/bg1.jpg"
           controlsList="nodownload"
           disablePictureInPicture
