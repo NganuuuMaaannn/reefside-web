@@ -73,87 +73,10 @@ export default function ScrollVideo2({ triggerRef, onReady }: ScrollVideo2Props)
       const canvas = canvasRef.current;
       if (!video || !canvas) return;
 
-      if (IS_MOBILE) {
-        let lastSeekedTime = -1;
-        let seeking = false;
-        let durationRetries = 0;
-        const MAX_DURATION_RETRIES = 30;
-        let retryTimer = 0;
-
-        const seek = (time: number) => {
-          if (seeking) return;
-          if (Math.abs(time - lastSeekedTime) < 0.12) return;
-          seeking = true;
-          lastSeekedTime = time;
-          video.currentTime = time;
-        };
-
-        const onSeeking = () => { seeking = true; };
-        const onSeeked = () => { seeking = false; };
-        video.addEventListener('seeking', onSeeking);
-        video.addEventListener('seeked', onSeeked);
-
-        const initScrollScrub = () => {
-          if (initializedRef.current) return;
-
-          const dur = video.duration;
-          if (!isFinite(dur) || dur <= 0) {
-            if (durationRetries < MAX_DURATION_RETRIES) {
-              durationRetries += 1;
-              window.clearTimeout(retryTimer);
-              retryTimer = window.setTimeout(initScrollScrub, 250);
-            } else {
-              onReady?.();
-            }
-            return;
-          }
-          const finalTime = Math.max(0, dur - 0.05);
-
-          initializedRef.current = true;
-          lastSeekedTime = video.currentTime || 0;
-
-          ScrollTrigger.create({
-            trigger: triggerRef?.current ?? wrapperRef.current,
-            start: 'top top',
-            end: '+=400%',
-            scrub: 0.8,
-            onUpdate: (self) => {
-              const fadeIn = Math.max(0, Math.min(1, (self.progress - 0.15) / 0.35));
-              video.style.opacity = String(fadeIn);
-              seek(self.progress * finalTime);
-            },
-          });
-
-          onReady?.();
-          ScrollTrigger.refresh();
-
-          requestAnimationFrame(() => {
-            window.scrollBy(0, 2);
-            requestAnimationFrame(() => window.scrollBy(0, -2));
-          });
-        };
-
-        const fallback = window.setTimeout(() => {
-          if (!initializedRef.current) onReady?.();
-          initScrollScrub();
-        }, 5000);
-        const handleError = () => {
-          if (!initializedRef.current) onReady?.();
-          initScrollScrub();
-        };
-
-        video.addEventListener('loadedmetadata', () => initScrollScrub(), { once: true });
-        video.addEventListener('canplay', initScrollScrub, { once: true });
-        video.addEventListener('error', handleError, { once: true });
-
-        return () => {
-          window.clearTimeout(fallback);
-          window.clearTimeout(retryTimer);
-          video.removeEventListener('seeking', onSeeking);
-          video.removeEventListener('seeked', onSeeked);
-          video.removeEventListener('error', handleError);
-        };
-      }
+      // Note: both desktop and mobile use the throttled RAF-eased scrub loop below.
+      // The old synchronous `variable.currentTime = t` seek-in-scroll-callback path
+      // (previously branch on IS_MOBILE) was removed because seeking on every scroll
+      // update overrode the decoder and caused stutter / freeze on touch devices.
 
       let scrubRaf = 0;
       let targetTime = 0;
